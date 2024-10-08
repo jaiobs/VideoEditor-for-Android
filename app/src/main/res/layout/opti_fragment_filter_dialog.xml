@@ -6,7 +6,7 @@
   ~ * */
   -->
 
-<android.support.constraint.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
@@ -35,7 +35,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:contentDescription="@string/app_name"/>
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvFilter"
             android:layout_width="match_parent"
             android:layout_height="@dimen/_130sdp"
@@ -44,4 +44,4 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/iv_close"/>
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

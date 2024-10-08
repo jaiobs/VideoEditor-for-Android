@@ -9,15 +9,15 @@ package com.obs.marveleditor.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.support.design.widget.BottomSheetDialogFragment
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.marveleditor.utils.OptiConstant
 import com.obs.marveleditor.OptiVideoEditor
 import com.obs.marveleditor.R
@@ -55,7 +55,7 @@ class OptiPlaybackSpeedDialogFragment : BottomSheetDialogFragment(), OptiDialogu
         rvPlaybackSpeed = rootView.findViewById(R.id.rvPlaybackSpeed)
         ivClose = rootView.findViewById(R.id.iv_close)
         ivDone = rootView.findViewById(R.id.iv_done)
-        linearLayoutManager = LinearLayoutManager(activity!!.applicationContext)
+        linearLayoutManager = LinearLayoutManager(requireActivity().applicationContext)
 
         mContext = context
 
@@ -77,7 +77,7 @@ class OptiPlaybackSpeedDialogFragment : BottomSheetDialogFragment(), OptiDialogu
         playbackSpeed.add(OptiConstant.SPEED_1_25)
         playbackSpeed.add(OptiConstant.SPEED_1_5)
 
-        optiPlaybackSpeedAdapter = OptiPlaybackSpeedAdapter(playbackSpeed, activity!!.applicationContext, this)
+        optiPlaybackSpeedAdapter = OptiPlaybackSpeedAdapter(playbackSpeed, requireActivity().applicationContext, this)
         rvPlaybackSpeed.adapter = optiPlaybackSpeedAdapter
         optiPlaybackSpeedAdapter.notifyDataSetChanged()
     }
@@ -130,10 +130,10 @@ class OptiPlaybackSpeedDialogFragment : BottomSheetDialogFragment(), OptiDialogu
     }
 
     /*private fun processFSVideo(ffMpegCommand: String) {
-        val outputFile = OptiUtils.createVideoFile(context!!)
+        val outputFile = OptiUtils.createVideoFile(requireContext())
         Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
 
-        VideoSpeed.with(context!!)
+        VideoSpeed.with(requireContext())
             .setFile(masterFile!!)
             .setIsHavingAudio(isHavingAudio)
             .setCallback(this@OptiPlaybackSpeedDialogFragment)
@@ -145,10 +145,10 @@ class OptiPlaybackSpeedDialogFragment : BottomSheetDialogFragment(), OptiDialogu
     override fun processVideo(playbackSpeed: String, tempo: String) {
         if(playbackSpeed != "0.0") {
             //output file is generated and send to video processing
-            val outputFile = OptiUtils.createVideoFile(context!!)
+            val outputFile = OptiUtils.createVideoFile(requireContext())
             Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
 
-            OptiVideoEditor.with(context!!)
+            OptiVideoEditor.with(requireContext())
                 .setType(OptiConstant.VIDEO_PLAYBACK_SPEED)
                 .setFile(masterFile!!)
                 .setOutputPath(outputFile.absolutePath)
@@ -160,7 +160,7 @@ class OptiPlaybackSpeedDialogFragment : BottomSheetDialogFragment(), OptiDialogu
             helper?.showLoading(true)
             dismiss()
         } else {
-            OptiUtils.showGlideToast(activity!!, getString(R.string.error_select_speed))
+            OptiUtils.showGlideToast(requireActivity(), getString(R.string.error_select_speed))
         }
     }
 }

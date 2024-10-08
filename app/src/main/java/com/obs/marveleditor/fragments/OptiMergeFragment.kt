@@ -18,19 +18,19 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
-import android.support.design.widget.BottomSheetDialogFragment
-import android.support.v4.app.ActivityCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import com.obs.marveleditor.utils.OptiConstant
 import com.obs.marveleditor.R
 import com.obs.marveleditor.utils.OptiUtils
 import com.obs.marveleditor.interfaces.OptiDialogueHelper
 import com.facebook.drawee.view.SimpleDraweeView
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.marveleditor.OptiVideoEditor
 import com.obs.marveleditor.interfaces.OptiFFMpegCallback
 import java.io.File
@@ -75,10 +75,10 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
                 dismiss()
 
                 //output file is generated and send to video processing
-                val outputFile = OptiUtils.createVideoFile(context!!)
+                val outputFile = OptiUtils.createVideoFile(requireContext())
                 Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
 
-                OptiVideoEditor.with(context!!)
+                OptiVideoEditor.with(requireContext())
                     .setType(OptiConstant.MERGE_VIDEO)
                     .setFile(videoFileOne!!)
                     .setFileTwo(videoFileTwo!!)
@@ -88,7 +88,7 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
 
                 helper?.showLoading(true)
             } else {
-                OptiUtils.showGlideToast(activity!!, getString(R.string.error_merge))
+                OptiUtils.showGlideToast(requireActivity(), getString(R.string.error_merge))
             }
         }
 
@@ -167,7 +167,7 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
     private fun callPermissionSettings() {
         val intent = Intent()
         intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-        val uri = Uri.fromParts("package", context!!.applicationContext.packageName, null)
+        val uri = Uri.fromParts("package", requireContext().applicationContext.packageName, null)
         intent.data = uri
         startActivityForResult(intent, 300)
     }
@@ -199,7 +199,7 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
                 val selectedImage = data.data
                 //  Log.e("selectedImage==>", "" + selectedImage)
                 val filePathColumn = arrayOf(MediaStore.MediaColumns.DATA)
-                val cursor = context!!.contentResolver
+                val cursor = requireContext().contentResolver
                     .query(selectedImage!!, filePathColumn, null, null, null)
                 if (cursor != null) {
                     cursor.moveToFirst()

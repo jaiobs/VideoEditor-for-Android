@@ -10,13 +10,13 @@ package com.obs.marveleditor.adapter
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.support.constraint.ConstraintLayout
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.RecyclerView
 import com.facebook.drawee.view.SimpleDraweeView
 import com.obs.marveleditor.R
 import com.obs.marveleditor.interfaces.OptiFilterListener
@@ -50,7 +50,7 @@ class OptiFilterAdapter(filterList: ArrayList<String>, bitmap: Bitmap, val conte
 
         holder.clFilter.setOnClickListener {
             //selected filter will be saved here
-            selectedPosition = position
+            selectedPosition = holder.adapterPosition
             selectedFilter = myFilterList[holder.adapterPosition]
             notifyDataSetChanged()
         }

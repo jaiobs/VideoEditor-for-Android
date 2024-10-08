@@ -31,7 +31,7 @@
                 android:textColor="@color/line_color"
                 android:textSize="@dimen/textLarge"/>
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/acivClose"
                 android:layout_width="@dimen/_18sdp"
                 android:layout_height="@dimen/_18sdp"
@@ -50,7 +50,7 @@
             android:layout_marginEnd="@dimen/_10sdp"
             android:background="@color/colorDivider"/>
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -90,6 +90,6 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvGallery"/>
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>

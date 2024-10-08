@@ -8,6 +8,7 @@
 package com.obs.marveleditor.utils
 
 import android.Manifest
+import android.os.Build
 
 class OptiConstant {
     companion object {
@@ -74,4 +75,9 @@ class OptiConstant {
 
         const val VIDEO_LIMIT = 4 //4 minutes
     }
+}
+
+
+fun isAndroidQAndAbove(): Boolean {
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 }

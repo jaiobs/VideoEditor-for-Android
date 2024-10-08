@@ -7,14 +7,14 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+//apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion compileSdk
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.obs.marveleditor"
-        minSdkVersion minSdk
-        targetSdkVersion targetSdk
+        minSdkVersion 24
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -27,41 +27,63 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+    ndkVersion '25.1.8937393'
+//    namespace 'com.obs.marveleditor'
+}
+
+repositories {
+    google()          // Ensure the Google repository is added here as well
+    mavenCentral()    // Optional, depending on your dependencies
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
 
-    implementation "com.android.support:appcompat-v7:${appCompat}"
-    implementation "com.android.support.constraint:constraint-layout:${constraint}"
-    implementation "com.android.support:design:${appCompat}"
+    configurations.configureEach {
+        resolutionStrategy {
+            force 'androidx.annotation:annotation:1.3.0'
+        }
+    }
+
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0"
+
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    implementation "com.google.android.material:material:1.9.0"
 
     //exoplayer
-    implementation "com.google.android.exoplayer:exoplayer-core:${exoPlayerCore}"
-    implementation "com.google.android.exoplayer:exoplayer-dash:${exoPlayer}"
-    implementation "com.google.android.exoplayer:exoplayer-ui:${exoPlayer}"
+    implementation "com.google.android.exoplayer:exoplayer-core:2.13.3"
+    implementation "com.google.android.exoplayer:exoplayer-dash:2.13.3"
+    implementation "com.google.android.exoplayer:exoplayer-ui:2.13.3"
+
+
 
     //ffmpeg
-    implementation "com.writingminds:FFmpegAndroid:${FFmpeg}"
-    implementation "org.jcodec:jcodec-android:${jcodec}"
+    implementation "com.writingminds:FFmpegAndroid:0.3.2"
+    implementation "org.jcodec:jcodec-android:0.1.9"
 
     //seekbar
-    implementation "com.github.guilhe:seekbar-ranged-view:${seekbar}"
+    implementation "com.github.guilhe:seekbar-ranged-view:3.0.0"
 
     //textSize
-    implementation "com.intuit.sdp:sdp-android:${sdpSize}"
+    implementation "com.intuit.sdp:sdp-android:1.1.0"
 
     //GlideToast
-    implementation "com.github.imjeevandeshmukh:GlideToast:${GlideToast}"
+    implementation "com.github.imjeevandeshmukh:GlideToast:1.0"
 
     //fresco
-    implementation "com.facebook.fresco:fresco:${fresco}"
+    implementation "com.facebook.fresco:fresco:1.9.0"
 
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    // Test dependencies
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

@@ -10,7 +10,7 @@ package com.obs.marveleditor.videoTrimmer.view;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.obs.marveleditor.R;
 import java.util.List;
 import java.util.Vector;

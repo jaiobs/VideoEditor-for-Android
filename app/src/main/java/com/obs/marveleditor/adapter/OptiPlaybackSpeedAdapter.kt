@@ -9,12 +9,12 @@ package com.obs.marveleditor.adapter
 
 import android.content.Context
 import android.graphics.Color
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import com.obs.marveleditor.R
 import com.obs.marveleditor.interfaces.OptiPlaybackSpeedListener
 import com.obs.marveleditor.utils.OptiConstant
@@ -51,10 +51,10 @@ class OptiPlaybackSpeedAdapter(private val playbackList: ArrayList<String>, val 
 
         holder.tvSpeed.setOnClickListener {
 
-            selectedPosition = position
+            selectedPosition = holder.adapterPosition
 
             //based on selected play back speed - playback & tempo is selected for processing
-            when (playbackList[position]) {
+            when (playbackList[holder.adapterPosition]) {
                 OptiConstant.SPEED_0_25 -> {
                     selectedPlayback = 1.75F
                     selectedTempo = 0.50F

@@ -12,15 +12,15 @@ import android.graphics.Bitmap
 import android.media.ThumbnailUtils
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.design.widget.BottomSheetDialogFragment
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.marveleditor.OptiVideoEditor
 import com.obs.marveleditor.R
 import com.obs.marveleditor.adapter.OptiFilterAdapter
@@ -58,7 +58,7 @@ class OptiFilterFragment : BottomSheetDialogFragment(), OptiFilterListener, Opti
         rvFilter = rootView.findViewById(R.id.rvFilter)
         ivClose = rootView.findViewById(R.id.iv_close)
         ivDone = rootView.findViewById(R.id.iv_done)
-        linearLayoutManager = LinearLayoutManager(activity!!.applicationContext)
+        linearLayoutManager = LinearLayoutManager(requireActivity().applicationContext)
 
         mContext = context
 
@@ -102,7 +102,7 @@ class OptiFilterFragment : BottomSheetDialogFragment(), OptiFilterListener, Opti
                     }
                 }
             } else {
-                OptiUtils.showGlideToast(activity!!, getString(R.string.error_select_filter))
+                OptiUtils.showGlideToast(requireActivity(), getString(R.string.error_select_filter))
             }
         }
 
@@ -121,17 +121,17 @@ class OptiFilterFragment : BottomSheetDialogFragment(), OptiFilterListener, Opti
             MediaStore.Video.Thumbnails.FULL_SCREEN_KIND
         )
 
-        optiFilterAdapter = OptiFilterAdapter(filterList, bmThumbnail!!, activity!!.applicationContext, this)
+        optiFilterAdapter = OptiFilterAdapter(filterList, bmThumbnail!!, requireActivity().applicationContext, this)
         rvFilter.adapter = optiFilterAdapter
         optiFilterAdapter.notifyDataSetChanged()
     }
 
     private fun applyFilterAction(command: String) {
         //output file is generated and send to video processing
-        val outputFile = OptiUtils.createVideoFile(context!!)
+        val outputFile = OptiUtils.createVideoFile(requireContext())
         Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
 
-        OptiVideoEditor.with(context!!)
+        OptiVideoEditor.with(requireContext())
             .setType(OptiConstant.VIDEO_FLIRT)
             .setFile(videoFile!!)
             .setFilter(command)

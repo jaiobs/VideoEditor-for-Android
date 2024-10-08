@@ -9,15 +9,16 @@ package com.obs.marveleditor.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.support.design.widget.BottomSheetDialogFragment
-import android.support.v7.widget.AppCompatTextView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatTextView
 import com.github.guilhe.views.SeekBarRangedView
+import com.github.guilhe.views.addActionListener
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.marveleditor.utils.OptiConstant
 import com.obs.marveleditor.OptiVideoEditor
 import com.obs.marveleditor.R
@@ -62,10 +63,10 @@ class OptiTrimFragment : BottomSheetDialogFragment(), OptiFFMpegCallback {
 
         ivDone.setOnClickListener {
             //output file is generated and send to video processing
-            val outputFile = OptiUtils.createVideoFile(context!!)
+            val outputFile = OptiUtils.createVideoFile(requireContext())
             Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
 
-            OptiVideoEditor.with(context!!)
+            OptiVideoEditor.with(requireContext())
                 .setType(OptiConstant.VIDEO_TRIM)
                 .setFile(videoFile!!)
                 .setOutputPath(outputFile.path)
@@ -81,22 +82,16 @@ class OptiTrimFragment : BottomSheetDialogFragment(), OptiFFMpegCallback {
         Log.v(tagName, "duration: $duration")
         Log.v(tagName, "duration: " + VideoUtils.secToTime(duration!!))
 
-        sbrvVideoTrim?.minValue = 0f
-        sbrvVideoTrim?.maxValue = duration?.toFloat()!!
+        sbrvVideoTrim?.setMinValue(0f)
+        sbrvVideoTrim?.setMaxValue(duration?.toFloat()!!)
         actvStartTime?.text = VideoUtils.secToTime(0)
         actvEndTime?.text = VideoUtils.secToTime(duration!!)
 
-        sbrvVideoTrim?.setOnSeekBarRangedChangeListener(object : SeekBarRangedView.OnSeekBarRangedChangeListener {
-            override fun onChanged(view: SeekBarRangedView?, minValue: Float, maxValue: Float) {
-                //exoPlayer?.seekTo(minValue.toLong())
-            }
-
-            override fun onChanging(view: SeekBarRangedView?, minValue: Float, maxValue: Float) {
-                Log.v(tagName, "minValue: $minValue, maxValue: $maxValue")
-                actvStartTime?.text = VideoUtils.secToTime(minValue.toLong())
-                actvEndTime?.text = VideoUtils.secToTime(maxValue.toLong())
-            }
-        })
+        sbrvVideoTrim?.addActionListener { minValue, maxValue ->
+            Log.v(tagName, "minValue: $minValue, maxValue: $maxValue")
+            actvStartTime?.text = VideoUtils.secToTime(minValue.toLong())
+            actvEndTime?.text = VideoUtils.secToTime(maxValue.toLong())
+        }
     }
 
     fun setHelper(helper: OptiBaseCreatorDialogFragment.CallBacks) {
