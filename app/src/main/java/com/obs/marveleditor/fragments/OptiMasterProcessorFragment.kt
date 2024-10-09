@@ -34,9 +34,6 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.github.hiteshsondhi88.libffmpeg.FFmpeg
-import com.github.hiteshsondhi88.libffmpeg.FFmpegLoadBinaryResponseHandler
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
@@ -138,29 +135,29 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
         )
 
         //load FFmpeg
-        try {
-            FFmpeg.getInstance(activity).loadBinary(object : FFmpegLoadBinaryResponseHandler {
-                override fun onFailure() {
-                    Log.v("FFMpeg", "Failed to load FFMpeg library.")
-                }
-
-                override fun onSuccess() {
-                    Log.v("FFMpeg", "FFMpeg Library loaded!")
-                }
-
-                override fun onStart() {
-                    Log.v("FFMpeg", "FFMpeg Started")
-                }
-
-                override fun onFinish() {
-                    Log.v("FFMpeg", "FFMpeg Stopped")
-                }
-            })
-        } catch (e: FFmpegNotSupportedException) {
-            e.printStackTrace()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+//        try {
+//            FFmpeg.getInstance(activity).loadBinary(object : FFmpegLoadBinaryResponseHandler {
+//                override fun onFailure() {
+//                    Log.v("FFMpeg", "Failed to load FFMpeg library.")
+//                }
+//
+//                override fun onSuccess() {
+//                    Log.v("FFMpeg", "FFMpeg Library loaded!")
+//                }
+//
+//                override fun onStart() {
+//                    Log.v("FFMpeg", "FFMpeg Started")
+//                }
+//
+//                override fun onFinish() {
+//                    Log.v("FFMpeg", "FFMpeg Stopped")
+//                }
+//            })
+//        } catch (e: FFmpegNotSupportedException) {
+//            e.printStackTrace()
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
 
         ibGallery?.setOnClickListener {
             openGallery()
@@ -283,18 +280,22 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
                 requestPermissions(permission, OptiConstant.RECORD_VIDEO)
             }
         } else {
-            val cameraIntent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
-            videoFile = OptiUtils.createVideoFile(requireContext())
-            Log.v(tagName, "videoPath1: " + videoFile!!.absolutePath)
-            videoUri = FileProvider.getUriForFile(
-                requireContext(),
-                "com.obs.marveleditor.provider", videoFile!!
-            )
-            cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 240) //4 minutes
-            cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1)
-            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoFile)
-            startActivityForResult(cameraIntent, OptiConstant.RECORD_VIDEO)
+            launchCameraForVideo()
         }
+    }
+
+    private fun launchCameraForVideo() {
+        val cameraIntent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
+        videoFile = OptiUtils.createVideoFile(requireContext())
+        Log.v(tagName, "videoPath1: " + videoFile!!.absolutePath)
+        videoUri = FileProvider.getUriForFile(
+            requireContext(),
+            "com.obs.marveleditor.provider", videoFile!!
+        )
+        cameraIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 240) //4 minutes
+        cameraIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1)
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoFile)
+        startActivityForResult(cameraIntent, OptiConstant.RECORD_VIDEO)
     }
 
 
@@ -571,7 +572,7 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
                     }
                 }
             } catch (e: Exception) {
-
+                e.printStackTrace()
             }
         }
     }
@@ -701,12 +702,21 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
 
     override fun openGallery() {
         releasePlayer()
-        checkPermission(OptiConstant.VIDEO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
+
+        if (OptiConstant.hasStoragePermission(requireContext())) {
+            launchVideoPicker()
+        } else {
+            checkPermission(OptiConstant.VIDEO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
     }
 
     override fun openCamera() {
         releasePlayer()
-        checkAllPermission(OptiConstant.PERMISSION_CAMERA)
+        if (OptiConstant.hasCameraAndStoragePermission(requireContext())) {
+            launchCameraForVideo()
+        } else {
+            checkAllPermission(OptiConstant.PERMISSION_CAMERA)
+        }
     }
 
 
@@ -726,11 +736,7 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             //call the gallery intent
-                            OptiUtils.refreshGalleryAlone(requireContext())
-                            val i = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-                            i.type = "video/*"
-                            i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("video/*"))
-                            startActivityForResult(i, OptiConstant.VIDEO_GALLERY)
+                            launchVideoPicker()
                         } else {
                             callPermissionSettings()
                         }
@@ -814,6 +820,14 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
                 return
             }
         }
+    }
+
+    private fun launchVideoPicker() {
+        OptiUtils.refreshGalleryAlone(requireContext())
+        val i = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+        i.type = "video/*"
+        i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("video/*"))
+        startActivityForResult(i, OptiConstant.VIDEO_GALLERY)
     }
 
     private fun callPermissionSettings() {

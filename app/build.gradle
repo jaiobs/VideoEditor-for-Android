@@ -67,7 +67,7 @@ dependencies {
 
 
     //ffmpeg
-    implementation "com.writingminds:FFmpegAndroid:0.3.2"
+    implementation 'com.arthenica:ffmpeg-kit-full-gpl:6.0-2.LTS'
     implementation "org.jcodec:jcodec-android:0.1.9"
 
     //seekbar

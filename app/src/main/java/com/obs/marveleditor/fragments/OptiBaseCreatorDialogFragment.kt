@@ -16,15 +16,17 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
-import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import java.io.File
 import android.webkit.MimeTypeMap
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.DialogFragment
+import com.arthenica.ffmpegkit.FFmpegKit
 import com.obs.marveleditor.R
+import com.obs.marveleditor.utils.isAndroidQAndAbove
 
 abstract class OptiBaseCreatorDialogFragment : DialogFragment() {
-    private var permissionsRequired = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    private var permissionsRequired =
+        if (isAndroidQAndAbove()) arrayOf() else arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +59,7 @@ abstract class OptiBaseCreatorDialogFragment : DialogFragment() {
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        stopRunningProcess()
+//        stopRunningProcess()
     }
 
     private fun callPermissionSettings() {
@@ -71,7 +73,7 @@ abstract class OptiBaseCreatorDialogFragment : DialogFragment() {
     override fun onResume() {
         super.onResume()
 
-        if (ActivityCompat.checkSelfPermission(requireContext(), permissionsRequired[0]) != PackageManager.PERMISSION_GRANTED) {
+        if (permissionsRequired.isNotEmpty() && ActivityCompat.checkSelfPermission(requireContext(), permissionsRequired[0]) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(permissionsRequired, 130)
         }
     }
@@ -99,11 +101,11 @@ abstract class OptiBaseCreatorDialogFragment : DialogFragment() {
 
 
     fun stopRunningProcess() {
-        FFmpeg.getInstance(activity).killRunningProcesses()
+        FFmpegKit.cancel()
     }
 
     fun isRunning(): Boolean {
-        return FFmpeg.getInstance(activity).isFFmpegCommandRunning
+        return FFmpegKit.listSessions().isNotEmpty()
     }
 
     fun showInProgressToast() {

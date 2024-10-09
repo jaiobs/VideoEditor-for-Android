@@ -44,6 +44,7 @@ import com.google.android.exoplayer2.util.Util
 import com.obs.marveleditor.OptiVideoEditor
 import com.obs.marveleditor.utils.OptiCommonMethods
 import com.obs.marveleditor.utils.OptiUtils
+import com.obs.marveleditor.utils.saveMediaToFile
 import java.io.File
 import kotlin.math.roundToLong
 
@@ -109,11 +110,19 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
         }
 
         ivRadio?.setOnClickListener {
-            checkPermission(OptiConstant.AUDIO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (OptiConstant.hasStoragePermission(requireContext())) {
+                launchAudioVideoPicker()
+            } else {
+                checkPermission(OptiConstant.AUDIO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
         }
 
         tvSelectedAudio?.setOnClickListener {
-            checkPermission(OptiConstant.AUDIO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (OptiConstant.hasStoragePermission(requireContext())) {
+                launchAudioVideoPicker()
+            } else {
+                checkPermission(OptiConstant.AUDIO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
         }
 
         sbrvVideoTrim?.addActionListener(
@@ -163,39 +172,33 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
 
         acbCrop?.setOnClickListener {
 
-            stopRunningProcess()
+            val trimDuration = maxSeekValue - minSeekValue
+            Log.v(tagName, "seekToValue: $seekToValue")
+            Log.v(tagName, "maxValue: $maxSeekValue")
+            Log.v(tagName, "minValue: $minSeekValue")
+            Log.v(tagName, "trimDuration: $trimDuration")
+            val convertedSeekValue = OptiCommonMethods.convertDuration(seekToValue)
+            Log.v(tagName, "convertedSeekValue: $convertedSeekValue")
+            /*val trimDurationLong = OptiCommonMethods.convertDurationInSec(trimDuration.roundToLong())
+            Log.v(tagName, "trimDurationLong: $trimDurationLong")*/
 
-            if (!isRunning()) {
-                val trimDuration = maxSeekValue - minSeekValue
-                Log.v(tagName, "seekToValue: $seekToValue")
-                Log.v(tagName, "maxValue: $maxSeekValue")
-                Log.v(tagName, "minValue: $minSeekValue")
-                Log.v(tagName, "trimDuration: $trimDuration")
-                val convertedSeekValue = OptiCommonMethods.convertDuration(seekToValue)
-                Log.v(tagName, "convertedSeekValue: $convertedSeekValue")
-                /*val trimDurationLong = OptiCommonMethods.convertDurationInSec(trimDuration.roundToLong())
-                Log.v(tagName, "trimDurationLong: $trimDurationLong")*/
-
-                if (trimDuration.roundToLong() >= seekToValue) {
-                    Toast.makeText(activity, "Please trim audio under $convertedSeekValue.", Toast.LENGTH_SHORT).show()
-                } else {
-                    //output file is generated and send to video processing
-                    val outputFile = OptiUtils.createAudioFile(requireContext())
-                    Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
-
-                    nextAction = 1
-
-                    OptiVideoEditor.with(requireContext())
-                        .setType(OptiConstant.AUDIO_TRIM)
-                        .setAudioFile(masterAudioFile!!)
-                        .setOutputPath(outputFile.absolutePath)
-                        .setStartTime(actvStartTime?.text.toString())
-                        .setEndTime(actvEndTime?.text.toString())
-                        .setCallback(this)
-                        .main()
-                }
+            if (trimDuration.roundToLong() >= seekToValue) {
+                Toast.makeText(activity, "Please trim audio under $convertedSeekValue.", Toast.LENGTH_SHORT).show()
             } else {
-                showInProgressToast()
+                //output file is generated and send to video processing
+                val outputFile = OptiUtils.createAudioFile(requireContext())
+                Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
+
+                nextAction = 1
+
+                OptiVideoEditor.with(requireContext())
+                    .setType(OptiConstant.AUDIO_TRIM)
+                    .setAudioFile(masterAudioFile!!)
+                    .setOutputPath(outputFile.absolutePath)
+                    .setStartTime(actvStartTime?.text.toString())
+                    .setEndTime(actvEndTime?.text.toString())
+                    .setCallback(this)
+                    .main()
             }
         }
     }
@@ -286,11 +289,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
                                 permission
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            //call the gallery intent
-                            val i = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
-                            i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
-                            startActivityForResult(i, OptiConstant.AUDIO_GALLERY)
-
+                            launchAudioVideoPicker()
                         } else {
                             val intent = Intent()
                             intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -303,6 +302,13 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
                 return
             }
         }
+    }
+
+    private fun launchAudioVideoPicker() {
+        //call the gallery intent
+        val i = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
+        i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
+        startActivityForResult(i, OptiConstant.AUDIO_GALLERY)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -322,30 +328,46 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
     private fun setFilePath(resultCode: Int, data: Intent, mode: Int) {
         if (resultCode == Activity.RESULT_OK) {
             try {
-                val selectedImage = data.data
+//                val selectedImage = data.data
+//
+//                val filePathColumn = arrayOf(MediaStore.MediaColumns.DATA)
+//                val cursor = requireContext().contentResolver.query(selectedImage!!, filePathColumn, null, null, null)
+//                if (cursor != null) {
+//                    cursor.moveToFirst()
+//                    val columnIndex = cursor.getColumnIndex(filePathColumn[0])
+//                    val filePath = cursor.getString(columnIndex)
+//                    cursor.close()
+//                    if (mode == OptiConstant.AUDIO_GALLERY) {
+//                        masterAudioFile = File(filePath)
+//                        masterAudioFile?.let { file ->
+//                            tvSelectedAudio!!.text = masterAudioFile!!.name.toString()
+//                            //setFilePathFromSource(file)
+//                            setControls(true)
+//
+//                            if (Util.SDK_INT <= 23 || exoPlayer == null) {
+//                                initializePlayer()
+//                            }
+//                        }
+//                    }
+//                }
 
-                val filePathColumn = arrayOf(MediaStore.MediaColumns.DATA)
-                val cursor = requireContext().contentResolver.query(selectedImage!!, filePathColumn, null, null, null)
-                if (cursor != null) {
-                    cursor.moveToFirst()
-                    val columnIndex = cursor.getColumnIndex(filePathColumn[0])
-                    val filePath = cursor.getString(columnIndex)
-                    cursor.close()
-                    if (mode == OptiConstant.AUDIO_GALLERY) {
-                        masterAudioFile = File(filePath)
-                        masterAudioFile?.let { file ->
-                            tvSelectedAudio!!.text = masterAudioFile!!.name.toString()
-                            //setFilePathFromSource(file)
-                            setControls(true)
+                data.data?.let { uri ->
 
-                            if (Util.SDK_INT <= 23 || exoPlayer == null) {
-                                initializePlayer()
-                            }
+                    val filePath = requireContext().saveMediaToFile(uri)
+                    masterAudioFile = File(filePath)
+                    masterAudioFile?.let { file ->
+                        tvSelectedAudio!!.text = masterAudioFile!!.name.toString()
+                        //setFilePathFromSource(file)
+                        setControls(true)
+
+                        if (Util.SDK_INT <= 23 || exoPlayer == null) {
+                            initializePlayer()
                         }
                     }
+
                 }
             } catch (e: Exception) {
-
+                e.printStackTrace()
             }
         }
     }
@@ -385,6 +407,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
             flLoadingView?.visibility = View.GONE
             acbCrop?.visibility = View.VISIBLE
             audioFile = convertedFile
+            onFinish()
         } else {
             helper?.showLoading(false)
             helper?.onFileProcessed(convertedFile)
@@ -421,27 +444,21 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
 
     private fun muxVideoPlayer() {
 
-        stopRunningProcess()
+        //output file is generated and send to video processing
+        val outputFile = OptiUtils.createVideoFile(requireContext())
+        Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
 
-        if (!isRunning()) {
-            //output file is generated and send to video processing
-            val outputFile = OptiUtils.createVideoFile(requireContext())
-            Log.v(tagName, "outputFile: ${outputFile.absolutePath}")
+        nextAction = 2
 
-            nextAction = 2
+        OptiVideoEditor.with(requireContext())
+            .setType(OptiConstant.VIDEO_AUDIO_MERGE)
+            .setFile(videoFile!!)
+            .setAudioFile(audioFile!!)
+            .setOutputPath(outputFile.path)
+            .setCallback(this)
+            .main()
 
-            OptiVideoEditor.with(requireContext())
-                .setType(OptiConstant.VIDEO_AUDIO_MERGE)
-                .setFile(videoFile!!)
-                .setAudioFile(audioFile!!)
-                .setOutputPath(outputFile.path)
-                .setCallback(this)
-                .main()
-
-            helper?.showLoading(true)
-        } else {
-            showInProgressToast()
-        }
+        helper?.showLoading(true)
     }
 
     override fun onCancel(dialog: DialogInterface) {

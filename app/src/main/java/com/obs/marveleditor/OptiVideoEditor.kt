@@ -9,9 +9,8 @@ package com.obs.marveleditor
 
 import android.content.Context
 import android.util.Log
-import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
-import com.github.hiteshsondhi88.libffmpeg.FFmpeg
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.ReturnCode
 import com.obs.marveleditor.interfaces.OptiFFMpegCallback
 import com.obs.marveleditor.utils.OptiConstant
 import com.obs.marveleditor.utils.OptiOutputType
@@ -251,34 +250,47 @@ class OptiVideoEditor private constructor(private val context: Context) {
         }
 
         try {
-            FFmpeg.getInstance(context).execute(cmd, object : ExecuteBinaryResponseHandler() {
-                override fun onStart() {
 
-                }
+            FFmpegKit.cancel()
+            val session = FFmpegKit.executeWithArguments(cmd)
+            val isSuccess = session?.returnCode?.value == ReturnCode.SUCCESS
 
-                override fun onProgress(message: String?) {
-                    callback!!.onProgress(message!!)
-                }
+            if (isSuccess) {
+                callback?.onSuccess(outputFile, OptiOutputType.TYPE_VIDEO)
+            } else {
+                callback?.onFailure(Exception("failure"))
+            }
 
-                override fun onSuccess(message: String?) {
-                    callback!!.onSuccess(outputFile, OptiOutputType.TYPE_VIDEO)
-                }
 
-                override fun onFailure(message: String?) {
-                    if (outputFile.exists()) {
-                        outputFile.delete()
-                    }
-                    callback!!.onFailure(IOException(message))
-                }
-
-                override fun onFinish() {
-                    callback!!.onFinish()
-                }
-            })
+//            FFmpeg.getInstance(context).execute(cmd, object : ExecuteBinaryResponseHandler() {
+//                override fun onStart() {
+//
+//                }
+//
+//                override fun onProgress(message: String?) {
+//                    callback!!.onProgress(message!!)
+//                }
+//
+//                override fun onSuccess(message: String?) {
+//                    callback!!.onSuccess(outputFile, OptiOutputType.TYPE_VIDEO)
+//                }
+//
+//                override fun onFailure(message: String?) {
+//                    if (outputFile.exists()) {
+//                        outputFile.delete()
+//                    }
+//                    callback!!.onFailure(IOException(message))
+//                }
+//
+//                override fun onFinish() {
+//                    callback!!.onFinish()
+//                }
+//            })
         } catch (e: Exception) {
             callback!!.onFailure(e)
-        } catch (e2: FFmpegCommandAlreadyRunningException) {
-            callback!!.onNotAvailable(e2)
         }
+//        catch (e2: FFmpegCommandAlreadyRunningException) {
+//            callback!!.onNotAvailable(e2)
+//        }
     }
 }

@@ -142,8 +142,9 @@ object OptiUtils {
     fun createAudioFile(context: Context): File {
         val timeStamp: String = SimpleDateFormat(OptiConstant.DATE_FORMAT, Locale.getDefault()).format(Date())
         val imageFileName: String = OptiConstant.APP_NAME + timeStamp + "_"
-        val storageDir: File? = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES)
-        if (storageDir?.exists() == false) storageDir.mkdirs()
+//        val storageDir: File? = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+//        if (storageDir?.exists() == false) storageDir.mkdirs()
+        val storageDir: File? = context.filesDir
         return File.createTempFile(imageFileName, OptiConstant.AUDIO_FORMAT, storageDir)
     }
 

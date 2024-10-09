@@ -8,7 +8,19 @@
 package com.obs.marveleditor.utils
 
 import android.Manifest
+import android.content.ContentResolver
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.webkit.MimeTypeMap
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class OptiConstant {
     companion object {
@@ -74,10 +86,197 @@ class OptiConstant {
         const val AVI_FORMAT = ".avi"
 
         const val VIDEO_LIMIT = 4 //4 minutes
+
+        fun hasCameraAndStoragePermission(context: Context): Boolean {
+            return hasCameraPermission(context) && hasStoragePermission(context)
+        }
+
+        fun hasCameraPermission(context: Context): Boolean {
+            return checkPermission(context, Manifest.permission.CAMERA)
+        }
+
+        fun hasStoragePermission(context: Context): Boolean {
+            return if (isAndroidTiramisuAndAbove()) {
+                checkPermission(context, Manifest.permission.READ_MEDIA_IMAGES)
+                        && checkPermission(context, Manifest.permission.READ_MEDIA_VIDEO)
+                        && checkPermission(context, Manifest.permission.READ_MEDIA_AUDIO)
+            } else if (isAndroidQAndAbove()) {
+                checkPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)
+            } else {
+                checkPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)
+                        && checkPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+
+        fun checkPermission(context: Context, permString: String): Boolean {
+            return ContextCompat.checkSelfPermission(
+                context, permString
+            ) == PackageManager.PERMISSION_GRANTED
+        }
     }
 }
 
+fun isAndroidTiramisuAndAbove(): Boolean {
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+}
 
 fun isAndroidQAndAbove(): Boolean {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+}
+
+fun Context.saveMediaToFile(uri: Uri, presetFileName: String? = null): String {
+    val subDirectory: String
+    val fileName: String
+
+    var mimeType: String? = ""
+    var fileExtensions: String? = ""
+    if (uri.scheme.equals(ContentResolver.SCHEME_CONTENT)) {
+        mimeType = contentResolver.getType(uri)
+        fileExtensions = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+    } else {
+        fileExtensions = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+        mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtensions)
+    }
+
+    when(mimeType) {
+        "image" -> {
+            subDirectory = "images"
+            fileName = "image_" + (presetFileName ?: System.currentTimeMillis()) + "." + fileExtensions
+        }
+        "video" -> {
+            subDirectory = "videos"
+            fileName = "video_" + (presetFileName ?: System.currentTimeMillis()) + "." + fileExtensions
+        }
+        "audio" -> {
+            subDirectory = "documents"
+            fileName = "document_" + (presetFileName ?: System.currentTimeMillis()) + "." + fileExtensions
+        }
+        else -> {
+            subDirectory = "files"
+            fileName = "file_" + (presetFileName ?: System.currentTimeMillis()) + "." + fileExtensions
+        }
+    }
+
+    val directory = File(filesDir.path + File.separator + subDirectory)
+
+    val fileToSave = File(directory, fileName)
+
+    if (!directory.exists()) {
+        directory.mkdirs()
+    }
+
+    if (!fileToSave.exists()) {
+        fileToSave.createNewFile()
+    } else {
+        fileToSave.delete()
+        fileToSave.createNewFile()
+    }
+
+    var bis: BufferedInputStream? = null
+    var bos: BufferedOutputStream? = null
+    try {
+        bis = BufferedInputStream(
+            contentResolver
+                .openInputStream(uri)
+        )
+        bos = BufferedOutputStream(
+            FileOutputStream(
+                fileToSave.path,
+                false
+            )
+        )
+        val buffer = ByteArray(1024)
+        bis.read(buffer)
+        do {
+            bos.write(buffer)
+        } while (bis.read(buffer) != -1)
+    } catch (ioe: IOException) {
+        ioe.printStackTrace()
+    } catch (e: SecurityException) {
+        e.printStackTrace()
+    } catch (e: RuntimeException){
+        e.printStackTrace()
+    }
+    finally {
+        try {
+            bis?.close()
+            bos?.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    return fileToSave.path
+}
+
+fun Context.saveMediaToFile(path: String): String {
+    val uri = File(path).toUri()
+
+    val subDirectory: String
+    val fileName: String
+
+    val fileExtensions = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtensions)
+
+    when {
+        mimeType.toString().contains("image") -> {
+            subDirectory = "images"
+            fileName = "image_" + System.currentTimeMillis() + "." + fileExtensions
+        }
+        mimeType.toString().contains("video") -> {
+            subDirectory = "videos"
+            fileName = "video_" + System.currentTimeMillis() + "." + fileExtensions
+        }
+        mimeType.toString().contains("audio") -> {
+            subDirectory = "documents"
+            fileName = "document_" + System.currentTimeMillis() + "." + fileExtensions
+        }
+        else -> {
+            subDirectory = "files"
+            fileName = "file_" + System.currentTimeMillis() + "." + fileExtensions
+        }
+    }
+
+    val directory = File(filesDir.path + File.separator + subDirectory)
+
+    val fileToSave = File(directory, fileName)
+
+    if (!directory.exists()) {
+        directory.mkdirs()
+    }
+
+    if (!fileToSave.exists()) {
+        fileToSave.createNewFile()
+    }
+
+    var bis: BufferedInputStream? = null
+    var bos: BufferedOutputStream? = null
+    try {
+        bis = BufferedInputStream(
+            contentResolver
+                .openInputStream(uri)
+        )
+        bos = BufferedOutputStream(
+            FileOutputStream(
+                fileToSave.path,
+                false
+            )
+        )
+        val buffer = ByteArray(1024)
+        bis.read(buffer)
+        do {
+            bos.write(buffer)
+        } while (bis.read(buffer) != -1)
+    } catch (ioe: IOException) {
+        ioe.printStackTrace()
+    } finally {
+        try {
+            bis?.close()
+            bos?.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    return fileToSave.path
 }

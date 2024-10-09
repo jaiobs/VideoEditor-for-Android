@@ -93,11 +93,19 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
         }
 
         ivVideoOne.setOnClickListener {
-            checkPermission(OptiConstant.VIDEO_MERGE_1, Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (OptiConstant.hasStoragePermission(requireContext())) {
+                launchVideoMergeIntent(OptiConstant.VIDEO_MERGE_1)
+            } else {
+                checkPermission(OptiConstant.VIDEO_MERGE_1, Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
         }
 
         ivVideoTwo.setOnClickListener {
-            checkPermission(OptiConstant.VIDEO_MERGE_2, Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (OptiConstant.hasStoragePermission(requireContext())) {
+                launchVideoMergeIntent(OptiConstant.VIDEO_MERGE_1)
+            } else {
+                checkPermission(OptiConstant.VIDEO_MERGE_2, Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
         }
     }
 
@@ -131,10 +139,7 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
                     } else {
                         if (ActivityCompat.checkSelfPermission(activity as Activity, permission) == PackageManager.PERMISSION_GRANTED) {
                             //call the gallery intent
-                            val i = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-                            i.setType("video/*")
-                            i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
-                            startActivityForResult(i, OptiConstant.VIDEO_MERGE_1)
+                            launchVideoMergeIntent(OptiConstant.VIDEO_MERGE_1)
                         } else {
                             callPermissionSettings()
                         }
@@ -150,10 +155,7 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
                     } else {
                         if (ActivityCompat.checkSelfPermission(activity as Activity, permission) == PackageManager.PERMISSION_GRANTED) {
                             //call the gallery intent
-                            val i = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-                            i.setType("video/*")
-                            i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
-                            startActivityForResult(i, OptiConstant.VIDEO_MERGE_2)
+                            launchVideoMergeIntent(OptiConstant.VIDEO_MERGE_2)
                         } else {
                             callPermissionSettings()
                         }
@@ -162,6 +164,14 @@ class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiF
                 return
             }
         }
+    }
+
+    private fun launchVideoMergeIntent(requestCode: Int) {
+
+        val i = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+        i.setType("video/*")
+        i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
+        startActivityForResult(i, requestCode)
     }
 
     private fun callPermissionSettings() {
