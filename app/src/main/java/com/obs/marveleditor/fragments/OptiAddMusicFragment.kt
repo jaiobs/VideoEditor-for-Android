@@ -36,9 +36,7 @@ import com.obs.marveleditor.interfaces.OptiDialogueHelper
 import com.github.guilhe.views.SeekBarRangedView
 import com.github.guilhe.views.addActionListener
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.util.Util
 import com.obs.marveleditor.OptiVideoEditor
@@ -111,7 +109,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
 
         ivRadio?.setOnClickListener {
             if (OptiConstant.hasStoragePermission(requireContext())) {
-                launchAudioVideoPicker()
+                this.launchAudioPicker()
             } else {
                 checkPermission(OptiConstant.AUDIO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
             }
@@ -119,7 +117,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
 
         tvSelectedAudio?.setOnClickListener {
             if (OptiConstant.hasStoragePermission(requireContext())) {
-                launchAudioVideoPicker()
+                this.launchAudioPicker()
             } else {
                 checkPermission(OptiConstant.AUDIO_GALLERY, Manifest.permission.READ_EXTERNAL_STORAGE)
             }
@@ -289,7 +287,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
                                 permission
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            launchAudioVideoPicker()
+                            this.launchAudioPicker()
                         } else {
                             val intent = Intent()
                             intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -304,7 +302,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
         }
     }
 
-    private fun launchAudioVideoPicker() {
+    private fun launchAudioPicker() {
         //call the gallery intent
         val i = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
         i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))

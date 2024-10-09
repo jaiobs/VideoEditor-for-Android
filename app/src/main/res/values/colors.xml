@@ -19,6 +19,7 @@
     <color name="colorDivider">#aaaaaa</color>
     <color name="text_grey">#949495</color>
 
+    <color name="red">#F44336</color>
     <color name="blue">#00e1e7</color>
     <color name="light_blue">#b9b4ff</color>
     <color name="shadow_color">#FF000000</color>

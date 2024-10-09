@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ /*
+  ~ * Created by Optisol on Aug 2019.
+  ~ * Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
+  ~ * */
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical">
+
+    <TextView
+            android:id="@+id/selectedRangeTime"
+            android:layout_width="@dimen/_300sdp"
+            android:layout_height="wrap_content"
+            android:text="00:00 - 00:30"
+            android:padding="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Continuous slider -->
+<!--    <com.google.android.material.slider.RangeSlider-->
+<!--            android:id="@+id/rangeSlider"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_margin="16dp"-->
+<!--            app:valueFrom="0"-->
+<!--            app:valueTo="100"-->
+<!--            app:values="10,90" />-->
+
+    <com.google.android.material.slider.RangeSlider
+            android:id="@+id/range_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:valueFrom="0.0"
+            android:valueTo="100.0"
+            android:layout_marginHorizontal="@dimen/_16sdp"
+            app:layout_constraintTop_toBottomOf="@+id/selectedRangeTime"/>
+
+    <HorizontalScrollView
+            android:id="@+id/audioScroller"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="horizontal"
+            app:layout_constraintTop_toBottomOf="@+id/range_slider">
+
+        <!-- Add your visual representation of the audio here -->
+        <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+            <!-- Add views for audio visual representation, e.g., bars or waveform -->
+
+
+            <com.masoudss.lib.WaveformSeekBar
+                    android:id="@+id/seekBarAudioProgress"
+                    android:layout_width="1000dp"
+                    android:layout_height="@dimen/_36sdp"
+                    app:wave_progress="33"
+                    app:wave_background_color="@color/text_grey"
+                    app:wave_progress_color="@color/blue"
+                    app:marker_color="@color/black"
+                    app:marker_width="1dp"
+                    android:layout_marginHorizontal="@dimen/_48sdp"/>
+
+            <View
+                    android:id="@+id/clickableView"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_36sdp"
+                />
+
+
+        </FrameLayout>
+
+    </HorizontalScrollView>
+
+
+    <View
+            android:id="@+id/audioSelectView"
+            android:layout_width="250dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@id/audioScroller"
+            app:layout_constraintBottom_toBottomOf="@id/audioScroller"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:background="@drawable/curve_shape_border"
+            />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
