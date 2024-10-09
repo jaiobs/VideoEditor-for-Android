@@ -29,7 +29,9 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
+import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.DialogFragment
 import com.obs.marveleditor.utils.OptiConstant
 import com.obs.marveleditor.R
@@ -98,22 +100,32 @@ class AudioRangeSliderFragment : DialogFragment() {
         val audioFile = File(audioFilePath)
         binding.seekBarAudioProgress.setSampleFrom(audioFile)
 
-
+        val audioSelectViewWidth = screenWidth / 3
+        // Set the width of audioSelectView to be a third of the screen width
         binding.audioSelectView.updateLayoutParams<ConstraintLayout.LayoutParams> {
-            width = screenWidth / 3
+            width = audioSelectViewWidth
         }
-
-//        rangeSlider.values = listOf(10f, 30f)
 
         val timeInMillis = OptiUtils.getVideoDuration(requireContext(), audioFile)
         val audioLength = (timeInMillis / 1000).toFloat() // Length of the audio in seconds
-        val frameSize = 30f // Fixed 30-second frame
+        val frameSize = 10f // Fixed 30-second frame
+
+        binding.audioSelectView.post {
+            // Calculate width for the seekBarAudioProgress based on audio length
+            binding.seekBarAudioProgress.updateLayoutParams<FrameLayout.LayoutParams> {
+                val seekBarWidth = (audioSelectViewWidth / frameSize) * audioLength
+                width = seekBarWidth.toInt()
+                val remainingHorizontalArea = binding.clParent.width - audioSelectViewWidth
+                marginStart = remainingHorizontalArea / 2
+                marginEnd = remainingHorizontalArea / 2
+            }
+        }
+
 
         // Setup RangeSlider
         binding.rangeSlider.valueFrom = 0f
         binding.rangeSlider.valueTo = audioLength
         binding.rangeSlider.setValues(0f, frameSize)
-
 
 
         // Update RangeSlider when user scrolls through the audio selector
