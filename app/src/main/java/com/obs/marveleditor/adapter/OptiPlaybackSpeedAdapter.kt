@@ -17,7 +17,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.obs.marveleditor.R
 import com.obs.marveleditor.interfaces.OptiPlaybackSpeedListener
-import com.obs.marveleditor.utils.OptiConstant
+import com.obs.videoeditor.editor.OptiConstant
 
 class OptiPlaybackSpeedAdapter(private val playbackList: ArrayList<String>, val context: Context, optiPlaybackSpeedListener: OptiPlaybackSpeedListener) :
     RecyclerView.Adapter<OptiPlaybackSpeedAdapter.MyPostViewHolder>() {

@@ -5,7 +5,7 @@
  *
  */
 
-package com.obs.marveleditor.utils
+package com.obs.videoeditor.editor
 
 class OptiOutputType {
     companion object {

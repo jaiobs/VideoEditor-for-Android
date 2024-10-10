@@ -22,7 +22,7 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.DialogFragment
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.obs.marveleditor.R
-import com.obs.marveleditor.utils.isAndroidQAndAbove
+import com.obs.videoeditor.editor.isAndroidQAndAbove
 
 abstract class OptiBaseCreatorDialogFragment : DialogFragment() {
     private var permissionsRequired =

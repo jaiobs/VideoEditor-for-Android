@@ -8,6 +8,14 @@
         android:background="@color/backgroundColor"
         android:orientation="vertical">
 
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/done"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
     <com.obs.videoeditor.audioRangeSlider.AudioRangeSelector
             android:id="@+id/audioRangeSelector"
             android:layout_width="match_parent"

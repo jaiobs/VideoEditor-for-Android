@@ -29,6 +29,8 @@ class AudioRangeSelector @JvmOverloads constructor(
     private val screenWidth: Int = Resources.getSystem().displayMetrics.widthPixels
     private var audioLengthMillis: Long = 0L
     private var listener: AudioRangeSelectorListener? = null
+    private var currStartPositionMillis: Long = 0L
+    private var frameSizeSecondsMillis: Long = 0L
 
 
     init {
@@ -46,6 +48,8 @@ class AudioRangeSelector @JvmOverloads constructor(
     ) {
         this.listener = listener
         this.audioLengthMillis = audioLengthMillis
+        this.currStartPositionMillis = 0L
+        this.frameSizeSecondsMillis = frameSizeSeconds.toLong() * 1000
 
         binding.rangeSlider.thumbRadius = 0
 
@@ -117,8 +121,13 @@ class AudioRangeSelector @JvmOverloads constructor(
         binding.seekBarAudioProgress.progress = progress
     }
 
+    fun getSelectedTimeRange(): Pair<Long, Long> {
+        return Pair(currStartPositionMillis, currStartPositionMillis + frameSizeSecondsMillis)
+    }
+
     private fun updateSelectedTime(startPosition: Int, endPosition: Int) {
-        listener?.updateStartPosition(startPosition.toLong() * 1000)
+        currStartPositionMillis = startPosition.toLong() * 1000
+        listener?.updateStartPosition(currStartPositionMillis)
         binding.selectedRangeTime.text = formatTime(startPosition) + " - " + formatTime(endPosition)
     }
 

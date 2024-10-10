@@ -38,39 +38,34 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.exoplayer2.DefaultLoadControl
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.util.Util
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.marveleditor.OptiTrimmerActivity
-import com.obs.marveleditor.OptiVideoEditor
+import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.marveleditor.R
 import com.obs.marveleditor.adapter.OptiVideoOptionsAdapter
 import com.obs.videoeditor.audioRangeSlider.AudioRangeSliderFragment
-import com.obs.marveleditor.interfaces.OptiFFMpegCallback
+import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.marveleditor.interfaces.OptiVideoOptionListener
 import com.obs.marveleditor.utils.OptiCommonMethods
-import com.obs.marveleditor.utils.OptiConstant
+import com.obs.videoeditor.editor.OptiConstant
 import com.obs.marveleditor.utils.OptiSessionManager
 import com.obs.marveleditor.utils.OptiUtils
 import com.obs.marveleditor.utils.VideoFrom
 import com.obs.marveleditor.utils.VideoUtils
-import com.obs.marveleditor.utils.isAndroidQAndAbove
-import com.obs.marveleditor.utils.saveMediaToFile
+import com.obs.videoeditor.editor.isAndroidQAndAbove
+import com.obs.videoeditor.editor.saveMediaToFile
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.CallBacks, OptiVideoOptionListener,
-    OptiFFMpegCallback  {
+    OptiFFMpegCallback, AudioRangeSliderFragment.AvMergerCallbackListener {
 
     private var tagName: String = OptiMasterProcessorFragment::class.java.simpleName
     private lateinit var rootView: View
@@ -245,6 +240,10 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
             currentWindow = 0
             initializePlayer()
         }
+    }
+
+    override fun onAudioVideoMerged(mergedVideoFile: File) {
+        onFileProcessed(mergedVideoFile)
     }
 
     override fun showLoading(isShow: Boolean) {
@@ -543,18 +542,34 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
     private fun handleSelectedAudio(data: Intent) {
         try {
             data.data?.let { uri ->
+                val audioFilePath = requireContext().saveMediaToFile(uri)
+                if (masterVideoFile != null && File(audioFilePath).exists()) {
+                    releasePlayer()
+                    val fragment = AudioRangeSliderFragment.newInstance(
+                        videoFilePath = masterVideoFile!!.path,
+                        audioFilePath = audioFilePath,
+                    )
+                    fragment.show(childFragmentManager, AudioRangeSliderFragment::class.simpleName)
 
-                val filePath = requireContext().saveMediaToFile(uri)
-
-                val fragment = AudioRangeSliderFragment.newInstance(
-                    audioFilePath = filePath
-                )
-                fragment.show(childFragmentManager, AudioRangeSliderFragment::class.simpleName)
-
+                } else if (masterVideoFile == null) {
+                    OptiUtils.showGlideToast(
+                        requireActivity(),
+                        getString(R.string.error_music)
+                    )
+                } else {
+                    OptiUtils.showGlideToast(
+                        requireActivity(),
+                        "looks like audio file doesn't exist"
+                    )
+                }
 
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            OptiUtils.showGlideToast(
+                requireActivity(),
+                e.message ?: "couldn't handle selected audio"
+            )
         }
     }
 
@@ -854,11 +869,11 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
     }
 
     private fun launchVideoPicker() {
-        OptiUtils.refreshGalleryAlone(requireContext())
-        val i = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-        i.type = "video/*"
-        i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("video/*"))
-        startActivityForResult(i, OptiConstant.VIDEO_GALLERY)
+        //call the gallery intent
+        val intent_upload = Intent()
+        intent_upload.setType("video/*")
+        intent_upload.setAction(Intent.ACTION_GET_CONTENT)
+        startActivityForResult(intent_upload, OptiConstant.VIDEO_GALLERY)
     }
 
     private fun callPermissionSettings() {
@@ -1030,10 +1045,6 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
         intent_upload.setType("audio/*")
         intent_upload.setAction(Intent.ACTION_GET_CONTENT)
         startActivityForResult(intent_upload, OptiConstant.AUDIO_GALLERY)
-
-//        val i = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
-//        i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
-//        startActivityForResult(i, OptiConstant.AUDIO_GALLERY)
     }
 
     override fun onProgress(progress: String) {

@@ -5,15 +5,26 @@
  *
  */
 
-package com.obs.marveleditor
+/*
+ *
+ *  Created by Optisol on Aug 2019.
+ *  Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
+ *
+ */
+
+/*
+ *
+ *  Created by Optisol on Aug 2019.
+ *  Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
+ *
+ */
+
+package com.obs.videoeditor.editor
 
 import android.content.Context
 import android.util.Log
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
-import com.obs.marveleditor.interfaces.OptiFFMpegCallback
-import com.obs.marveleditor.utils.OptiConstant
-import com.obs.marveleditor.utils.OptiOutputType
 import java.io.File
 import java.io.IOException
 
@@ -182,7 +193,6 @@ class OptiVideoEditor private constructor(private val context: Context) {
             }
         }
 
-
         val outputFile = File(outputFilePath)
         Log.v(tagName, "outputFilePath: $outputFilePath")
         var cmd: Array<String>? = null
@@ -261,36 +271,8 @@ class OptiVideoEditor private constructor(private val context: Context) {
                 callback?.onFailure(Exception("failure"))
             }
 
-
-//            FFmpeg.getInstance(context).execute(cmd, object : ExecuteBinaryResponseHandler() {
-//                override fun onStart() {
-//
-//                }
-//
-//                override fun onProgress(message: String?) {
-//                    callback!!.onProgress(message!!)
-//                }
-//
-//                override fun onSuccess(message: String?) {
-//                    callback!!.onSuccess(outputFile, OptiOutputType.TYPE_VIDEO)
-//                }
-//
-//                override fun onFailure(message: String?) {
-//                    if (outputFile.exists()) {
-//                        outputFile.delete()
-//                    }
-//                    callback!!.onFailure(IOException(message))
-//                }
-//
-//                override fun onFinish() {
-//                    callback!!.onFinish()
-//                }
-//            })
         } catch (e: Exception) {
             callback!!.onFailure(e)
         }
-//        catch (e2: FFmpegCommandAlreadyRunningException) {
-//            callback!!.onNotAvailable(e2)
-//        }
     }
 }

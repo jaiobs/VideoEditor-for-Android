@@ -25,14 +25,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import com.obs.marveleditor.utils.OptiConstant
+import com.obs.videoeditor.editor.OptiConstant
 import com.obs.marveleditor.R
 import com.obs.marveleditor.utils.OptiUtils
 import com.obs.marveleditor.interfaces.OptiDialogueHelper
 import com.facebook.drawee.view.SimpleDraweeView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.obs.marveleditor.OptiVideoEditor
-import com.obs.marveleditor.interfaces.OptiFFMpegCallback
+import com.obs.videoeditor.editor.OptiVideoEditor
+import com.obs.videoeditor.editor.OptiFFMpegCallback
 import java.io.File
 
 class OptiMergeFragment : BottomSheetDialogFragment(), OptiDialogueHelper, OptiFFMpegCallback {

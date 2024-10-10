@@ -20,12 +20,12 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.obs.marveleditor.utils.OptiConstant
-import com.obs.marveleditor.OptiVideoEditor
+import com.obs.videoeditor.editor.OptiConstant
+import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.marveleditor.R
 import com.obs.marveleditor.adapter.OptiPositionAdapter
 import com.obs.marveleditor.interfaces.OptiPositionListener
-import com.obs.marveleditor.interfaces.OptiFFMpegCallback
+import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.marveleditor.utils.OptiUtils
 import java.io.File
 import java.util.*

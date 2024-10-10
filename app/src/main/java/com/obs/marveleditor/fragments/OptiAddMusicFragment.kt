@@ -26,9 +26,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import com.obs.marveleditor.utils.OptiConstant
+import com.obs.videoeditor.editor.OptiConstant
 import com.obs.marveleditor.R
-import com.obs.marveleditor.interfaces.OptiFFMpegCallback
+import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.marveleditor.utils.VideoUtils.buildMediaSource
 import com.obs.marveleditor.utils.VideoUtils.secToTime
 import com.obs.marveleditor.utils.VideoFrom
@@ -38,14 +38,15 @@ import com.github.guilhe.views.addActionListener
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.util.Util
-import com.obs.marveleditor.OptiVideoEditor
+import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.marveleditor.utils.OptiCommonMethods
 import com.obs.marveleditor.utils.OptiUtils
-import com.obs.marveleditor.utils.saveMediaToFile
+import com.obs.videoeditor.editor.saveMediaToFile
 import java.io.File
 import kotlin.math.roundToLong
 
-class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper, OptiFFMpegCallback {
+class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper,
+    OptiFFMpegCallback {
 
     private var tagName: String = OptiAddMusicFragment::class.java.simpleName
     private var audioFile: File? = null
@@ -300,9 +301,10 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
 
     private fun launchAudioPicker() {
         //call the gallery intent
-        val i = Intent(Intent.ACTION_PICK, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
-        i.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("audio/*", "video/*"))
-        startActivityForResult(i, OptiConstant.AUDIO_GALLERY)
+        val intent_upload = Intent()
+        intent_upload.setType("audio/*")
+        intent_upload.setAction(Intent.ACTION_GET_CONTENT)
+        startActivityForResult(intent_upload, OptiConstant.AUDIO_GALLERY)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -15,7 +15,7 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.obs.marveleditor.R
 import com.obs.marveleditor.interfaces.OptiVideoOptionListener
-import com.obs.marveleditor.utils.OptiConstant
+import com.obs.videoeditor.editor.OptiConstant
 
 class OptiVideoOptionsAdapter(videoOptions: ArrayList<String>, val context: Context, optiVideoOptionListener: OptiVideoOptionListener, orientationLand: Boolean) :
     RecyclerView.Adapter<OptiVideoOptionsAdapter.MyPostViewHolder>() {
