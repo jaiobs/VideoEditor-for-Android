@@ -29,7 +29,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 
-class AudioRangeSliderFragment : BottomSheetDialogFragment() {
+class AudioRangeSliderFragment : BottomSheetDialogFragment(),
+        AudioRangeSelector.AudioRangeSelectorListener
+{
 
 
     companion object {
@@ -49,12 +51,11 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
         get() = requireNotNull(_binding)
 
 
-    private val screenWidth: Int = Resources.getSystem().displayMetrics.widthPixels
     private lateinit var audioFilePath: String
     private var exoPlayer: ExoPlayer? = null
     private var frameSizeSeconds: Float = 1f
 
-    private lateinit var audioFile: File
+    private var audioFile: File? = null
     private var audioLengthMillis: Long = 0L
     private var currStartPositionMillis: Long = 0L
 
@@ -89,8 +90,11 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
     }
 
     private fun initValues() {
-        audioFile = File(audioFilePath)
-        audioLengthMillis = getVideoDuration(requireContext(), audioFile)
+        val file = File(audioFilePath)
+        if (file.exists()) {
+            audioFile = file
+            audioLengthMillis = getVideoDuration(requireContext(), audioFile!!)
+        }
     }
 
     private fun setupExoPlayer() {
@@ -124,74 +128,19 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
     }
 
     private fun initAudioView() {
-        if (audioFilePath.isBlank()) {
+        if (audioFile?.exists() == false) {
             Toast.makeText(requireContext(), "Audio File Path is blank", Toast.LENGTH_SHORT).show()
             return
         }
 
-        binding.rangeSlider.thumbRadius = 0
-
-        binding.seekBarAudioProgress.setSampleFrom(audioFile)
-        binding.seekBarAudioProgress.isEnabled = false
-
-        val audioSelectViewWidth = screenWidth / 3
-        binding.audioSelectView.updateLayoutParams<ConstraintLayout.LayoutParams> {
-            width = audioSelectViewWidth
-        }
-
-        val audioLengthSeconds = (audioLengthMillis / 1000).toFloat()
-
-        binding.audioSelectView.post {
-            // Calculate width for the seekBarAudioProgress based on audio length
-            binding.seekBarAudioProgress.updateLayoutParams<FrameLayout.LayoutParams> {
-                val seekBarWidth = (audioSelectViewWidth / frameSizeSeconds) * audioLengthSeconds
-                width = seekBarWidth.toInt()
-                val remainingHorizontalArea = binding.clAudioSelector.width - audioSelectViewWidth
-                marginStart = remainingHorizontalArea / 2
-                marginEnd = remainingHorizontalArea / 2
-            }
-        }
-
-
-        binding.rangeSlider.valueFrom = 0f
-        binding.rangeSlider.valueTo = audioLengthSeconds
-        binding.rangeSlider.setValues(0f, frameSizeSeconds)
-        updateSelectedTime(0, frameSizeSeconds.toInt())
-        playAudioAt(0f)
-
-
-        // Update RangeSlider when user scrolls through the audio selector
-        binding.audioScroller.setOnScrollChangeListener { _, scrollX, _, _, _ ->
-            // Get maximum scrollable width (total width - visible width)
-            val maxScroll = binding.audioScroller.getChildAt(0).width - binding.audioScroller.width
-            // Calculate scroll ratio (how far we have scrolled compared to total scrollable width)
-            val scrollRatio = scrollX.toFloat() / maxScroll.toFloat()
-            // Calculate new start position in the audio based on scroll ratio
-            val newStartPosition = scrollRatio * (audioLengthSeconds - frameSizeSeconds)
-            val newEndPosition = minOf(newStartPosition + frameSizeSeconds, audioLengthSeconds)
-
-            binding.rangeSlider.setValues(newStartPosition, newEndPosition)
-            updateSelectedTime(newStartPosition.toInt(), newEndPosition.toInt())
-
-            playAudioAt(newStartPosition)
-        }
-
-        // Update the scrolling position when the user changes the RangeSlider
-        binding.rangeSlider.addOnChangeListener { slider, _, _ ->
-            val startPosition = slider.values[0]
-            val endPosition = minOf(startPosition + frameSizeSeconds, audioLengthSeconds)
-
-            // Set the thumbs to indicated the frameSize
-            slider.setValues(startPosition, endPosition)
-            updateSelectedTime(startPosition.toInt(), endPosition.toInt())
-
-            // Calculate the scroll position based on the new start time
-            val maxScroll = binding.audioScroller.getChildAt(0).width - binding.audioScroller.width
-            val scrollPosition = (startPosition / (audioLengthSeconds - frameSizeSeconds)) * maxScroll
-            binding.audioScroller.smoothScrollTo(scrollPosition.toInt(), 0)
-            playAudioAt(startPosition)
-        }
+        binding.audioRangeSelector.initializeViews(
+            audioFile = audioFile!!,
+            audioLengthMillis = audioLengthMillis,
+            frameSizeSeconds = frameSizeSeconds,
+            listener = this
+        )
     }
+
 
     private fun startUpdatingAudioWave() {
         progressUpdateJob?.cancel()
@@ -209,9 +158,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
     }
 
     private fun updateAudioWaveProgress(playerPosMillis: Long) {
-        val progress = (playerPosMillis.toFloat() / audioLengthMillis) * 100f
-        if (progress < 0 || progress > 100f)    return
-        binding.seekBarAudioProgress.progress = progress
+        binding.audioRangeSelector.updateAudioWaveProgress(playerPosMillis)
     }
 
 
@@ -219,7 +166,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
         progressUpdateJob?.cancel()
     }
 
-    private fun playAudioAt(startPosSeconds: Float) {
+    override fun playAudioAt(startPosSeconds: Float) {
         val startPosMillis = (startPosSeconds * 1000).toLong()
         exoPlayer?.seekTo(startPosMillis)
         exoPlayer?.play()
@@ -230,15 +177,9 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
         exoPlayer?.pause()
     }
 
-    private fun updateSelectedTime(startPosition: Int, endPosition: Int) {
-        currStartPositionMillis = startPosition.toLong() * 1000
-        binding.selectedRangeTime.text = formatTime(startPosition) + " - " + formatTime(endPosition)
-    }
 
-    private fun formatTime(seconds: Int): String {
-        val minutes = seconds / 60
-        val secs = seconds % 60
-        return String.format("%02d:%02d", minutes, secs)
+    override fun updateStartPosition(startPosMillis: Long) {
+        currStartPositionMillis = startPosMillis
     }
 
     override fun onPause() {

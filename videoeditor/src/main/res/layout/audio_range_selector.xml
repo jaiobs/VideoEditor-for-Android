@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/clAudioSelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/backgroundColor">
+
+
+    <TextView
+            android:id="@+id/selectedRangeTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="00:00 - 00:30"
+            android:textAlignment="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    <com.google.android.material.slider.RangeSlider
+            android:id="@+id/range_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:valueFrom="0.0"
+            android:valueTo="100.0"
+            android:layout_marginHorizontal="@dimen/_24sdp"
+            app:layout_constraintTop_toBottomOf="@+id/selectedRangeTime"/>
+
+    <HorizontalScrollView
+            android:id="@+id/audioScroller"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginBottom="@dimen/_24sdp"
+            app:layout_constraintTop_toBottomOf="@+id/range_slider"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+        <FrameLayout
+                android:id="@+id/flScroller"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+            <com.masoudss.lib.WaveformSeekBar
+                    android:id="@+id/seekBarAudioProgress"
+                    android:layout_width="1000dp"
+                    android:layout_height="@dimen/_36sdp"
+                    app:wave_progress="50"
+                    app:wave_background_color="@color/text_grey"
+                    app:wave_progress_color="@color/blue"
+                    app:marker_color="@color/colorOnBackground"
+                    app:marker_width="1dp"/>
+
+
+        </FrameLayout>
+
+    </HorizontalScrollView>
+
+
+    <View
+            android:id="@+id/dimViewLeft"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/colorOnBackground"
+            android:layout_marginEnd="-5dp"
+            app:layout_constraintTop_toTopOf="@id/audioSelectView"
+            app:layout_constraintBottom_toBottomOf="@id/audioSelectView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/audioSelectView"
+            android:alpha="0.1" />
+
+    <View
+            android:id="@+id/audioSelectView"
+            android:layout_width="250dp"
+            android:layout_height="@dimen/_48sdp"
+            android:background="@drawable/curve_shape_border"
+            app:layout_constraintTop_toTopOf="@id/audioScroller"
+            app:layout_constraintBottom_toBottomOf="@id/audioScroller"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+    <View
+            android:id="@+id/dimViewRight"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/colorOnBackground"
+            android:layout_marginStart="-5dp"
+            app:layout_constraintTop_toTopOf="@id/audioSelectView"
+            app:layout_constraintBottom_toBottomOf="@id/audioSelectView"
+            app:layout_constraintStart_toEndOf="@id/audioSelectView"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:alpha="0.1" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
