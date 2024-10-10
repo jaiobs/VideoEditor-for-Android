@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.obs.marveleditor.R
 import com.obs.marveleditor.databinding.FragmentAudioRangeSliderBinding
 import com.obs.marveleditor.utils.OptiUtils
 import kotlinx.coroutines.Dispatchers
@@ -137,6 +138,8 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
             Toast.makeText(requireContext(), "Audio File Path is blank", Toast.LENGTH_SHORT).show()
             return
         }
+
+        binding.rangeSlider.thumbRadius = 0
 
         binding.seekBarAudioProgress.setSampleFrom(audioFile)
         binding.seekBarAudioProgress.isEnabled = false
