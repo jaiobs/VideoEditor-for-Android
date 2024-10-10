@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -41,11 +42,11 @@ class AudioRangeSelector @JvmOverloads constructor(
             LayoutInflater.from(context), this, true
         )
 
-        binding.rangeSlider.apply {
-            trackActiveTintList = ColorStateList.valueOf(
+        with(binding) {
+            rangeSlider.trackActiveTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(context, R.color.white)
             )
-            trackInactiveTintList = ColorStateList.valueOf(
+            rangeSlider.trackInactiveTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(context, R.color.slider_track_grey)
             )
 
@@ -112,9 +113,28 @@ class AudioRangeSelector @JvmOverloads constructor(
         }
 
         // Update the scrolling position when the user changes the RangeSlider
-        binding.rangeSlider.addOnChangeListener { slider, _, _ ->
-            val startPosition = slider.values[0]
-            val endPosition = minOf(startPosition + frameSizeSeconds, audioLengthSeconds)
+        binding.rangeSlider.addOnChangeListener { slider, _, fromUser ->
+            if (fromUser.not())    return@addOnChangeListener
+
+            var startPosition = slider.values[0]
+            var endPosition = slider.values[1]
+
+            val isLeftChanged = startPosition.toLong() != (currStartPositionMillis / 1000)
+            Log.e("TEST_aud", "initializeViews: isLeftChanged = $isLeftChanged, startPos = ${startPosition.toLong()}, curr = ${currStartPositionMillis/1000}, slider.values = ${slider.values}", )
+
+            if (isLeftChanged) {
+                endPosition = startPosition + frameSizeSeconds
+            } else {
+                startPosition = endPosition - frameSizeSeconds
+            }
+
+            if (startPosition < 0) {
+                startPosition = 0f
+                endPosition = frameSizeSeconds
+            } else if (endPosition > audioLengthSeconds) {
+                endPosition = audioLengthSeconds
+                startPosition = endPosition - frameSizeSeconds
+            }
 
             // Set the thumbs to indicated the frameSize
             slider.setValues(startPosition, endPosition)
