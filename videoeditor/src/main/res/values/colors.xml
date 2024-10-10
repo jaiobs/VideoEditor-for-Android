@@ -1,0 +1,28 @@
+
+<!--
+  ~ /*
+  ~ * Created by Optisol on Aug 2019.
+  ~ * Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
+  ~ * */
+  -->
+
+<resources>
+    <color name="colorPrimary">#000000</color>
+    <color name="colorPrimaryDark">#808080</color>
+    <color name="colorAccent">#4DC662</color>
+
+    <color name="colorOnBackground">#000000</color>
+    <color name="backgroundColor">#ffffff</color>
+
+    <color name="text_header">#5f5f5f</color>
+    <color name="line_color">#7a7a7a</color>
+    <color name="colorDivider">#aaaaaa</color>
+    <color name="text_grey">#949495</color>
+
+    <color name="red">#F44336</color>
+    <color name="blue">#00e1e7</color>
+    <color name="light_blue">#b9b4ff</color>
+    <color name="shadow_color">#FF000000</color>
+    <color name="line_button">#565758</color>
+    <color name="background_video_color">#2f3031</color>
+</resources>

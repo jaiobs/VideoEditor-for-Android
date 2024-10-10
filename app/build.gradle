@@ -54,13 +54,14 @@ dependencies {
         }
     }
 
+    implementation project(path: ':videoeditor')
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0"
 
     implementation "androidx.appcompat:appcompat:1.6.1"
     implementation "androidx.constraintlayout:constraintlayout:2.1.4"
-    implementation "com.google.android.material:material:1.12.0"
+    implementation 'com.google.android.material:material:1.9.0'
 
     //exoplayer
     implementation "com.google.android.exoplayer:exoplayer-core:2.13.3"
@@ -90,10 +91,4 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    // audio wave
-//    implementation 'com.github.alxrm:audiowave-progressbar:0.9.2'
-    implementation  'com.github.massoudss:waveformSeekBar:5.0.2'
-    // Amplitude will allow you to call setSampleFrom() with files, URLs, Uri and resources
-    // Important: Only works with api level 21 and higher
-    implementation 'com.github.lincollincol:amplituda:2.2.2' // or newer version
 }

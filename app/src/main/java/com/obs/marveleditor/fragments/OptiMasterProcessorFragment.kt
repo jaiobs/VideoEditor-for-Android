@@ -41,7 +41,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlaybackException
-import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
@@ -52,7 +53,7 @@ import com.obs.marveleditor.OptiTrimmerActivity
 import com.obs.marveleditor.OptiVideoEditor
 import com.obs.marveleditor.R
 import com.obs.marveleditor.adapter.OptiVideoOptionsAdapter
-import com.obs.marveleditor.fragments.rangeSlider.AudioRangeSliderFragment
+import com.obs.videoeditor.audioRangeSlider.AudioRangeSliderFragment
 import com.obs.marveleditor.interfaces.OptiFFMpegCallback
 import com.obs.marveleditor.interfaces.OptiVideoOptionListener
 import com.obs.marveleditor.utils.OptiCommonMethods
@@ -87,7 +88,7 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
     private var currentWindow: Int = 0
     private var ePlayer: PlayerView? = null
     private var pbLoading: ProgressBar? = null
-    private var exoPlayer: SimpleExoPlayer? = null
+    private var exoPlayer: ExoPlayer? = null
     private var playWhenReady: Boolean? = false
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var rvVideoOptions: RecyclerView
@@ -647,11 +648,7 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
             tvInfo!!.visibility= View.GONE
 
             ePlayer?.useController = true
-            exoPlayer = ExoPlayerFactory.newSimpleInstance(
-                requireContext(),
-                DefaultRenderersFactory(requireContext()),
-                DefaultTrackSelector(), DefaultLoadControl()
-            )
+            exoPlayer = ExoPlayer.Builder(requireContext()).build()
 
             ePlayer?.player = exoPlayer
 
@@ -673,11 +670,11 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
         }
     }
 
-    private val playerListener = object : Player.EventListener {
+    private val playerListener = object : Player.Listener {
 
 
 
-        override fun onPlayerError(error: ExoPlaybackException) {
+        override fun onPlayerError(error: PlaybackException) {
             Log.v(tagName, "onPlayerError: ${error.toString()}")
             Toast.makeText(mContext, "Video format is not supported", Toast.LENGTH_LONG).show()
         }

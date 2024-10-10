@@ -1,13 +1,8 @@
-/*
- *
- *  Created by Optisol on Aug 2019.
- *  Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
- *
- */
+package com.obs.videoeditor.audioRangeSlider
 
-package com.obs.marveleditor.fragments.rangeSlider
-
+import android.content.Context
 import android.content.res.Resources
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -19,20 +14,14 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
-import com.google.android.exoplayer2.DefaultLoadControl
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.obs.marveleditor.R
-import com.obs.marveleditor.databinding.FragmentAudioRangeSliderBinding
-import com.obs.marveleditor.utils.OptiUtils
+import com.obs.videoeditor.databinding.FragmentAudioRangeSliderBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -101,21 +90,17 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
 
     private fun initValues() {
         audioFile = File(audioFilePath)
-        audioLengthMillis = OptiUtils.getVideoDuration(requireContext(), audioFile)
+        audioLengthMillis = getVideoDuration(requireContext(), audioFile)
     }
 
     private fun setupExoPlayer() {
-//        exoPlayer = ExoPlayer.Builder(requireContext()).build()
-        exoPlayer = ExoPlayerFactory.newSimpleInstance(
-            requireContext(), DefaultRenderersFactory(requireContext()),
-            DefaultTrackSelector(), DefaultLoadControl()
-        )
+        exoPlayer = ExoPlayer.Builder(requireContext()).build()
 
         val mediaItem = MediaItem.fromUri(Uri.parse(audioFilePath))
         exoPlayer?.setMediaItem(mediaItem)
         exoPlayer?.prepare()
 
-        exoPlayer?.addListener(object : Player.EventListener {
+        exoPlayer?.addListener(object : Player.Listener {
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
@@ -126,9 +111,14 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
                 }
             }
 
-            override fun onPlayerError(error: ExoPlaybackException) {
+            override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
-                Log.e("TEST_exo", "onPlayerError: error = $error", )
+                Log.e("TEST_exo", "onPlayerError: error = $error")
+            }
+
+            override fun onPlayerErrorChanged(error: PlaybackException?) {
+                super.onPlayerErrorChanged(error)
+                Log.e("TEST_exo", "onPlayerErrorChanged: error = $error")
             }
         })
     }
@@ -271,5 +261,14 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         behavior.skipCollapsed = true
 
+    }
+
+    private fun getVideoDuration(context: Context, file: File): Long{
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(context, Uri.fromFile(file))
+        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: "0"
+        val timeInMillis = time.toLong()
+        retriever.release()
+        return timeInMillis
     }
 }

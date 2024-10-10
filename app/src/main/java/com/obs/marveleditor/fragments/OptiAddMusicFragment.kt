@@ -36,7 +36,6 @@ import com.obs.marveleditor.interfaces.OptiDialogueHelper
 import com.github.guilhe.views.SeekBarRangedView
 import com.github.guilhe.views.addActionListener
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.util.Util
 import com.obs.marveleditor.OptiVideoEditor
@@ -52,7 +51,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
     private var audioFile: File? = null
     private var videoFile: File? = null
     private var playWhenReady: Boolean? = false
-    private var exoPlayer: SimpleExoPlayer? = null
+    private var exoPlayer: ExoPlayer? = null
     private var sbrvVideoTrim: SeekBarRangedView? = null
     private var acbCrop: AppCompatButton? = null
     private var actvStartTime: AppCompatTextView? = null
@@ -149,10 +148,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
     }
 
     private fun initializePlayer() {
-        exoPlayer = ExoPlayerFactory.newSimpleInstance(
-            requireContext(), DefaultRenderersFactory(requireContext()),
-            DefaultTrackSelector(), DefaultLoadControl()
-        )
+        exoPlayer = ExoPlayer.Builder(requireContext()).build()
 
         ePlayer?.player = exoPlayer
 
@@ -201,7 +197,7 @@ class OptiAddMusicFragment : OptiBaseCreatorDialogFragment(), OptiDialogueHelper
         }
     }
 
-    private val playerListener = object : Player.EventListener {
+    private val playerListener = object : Player.Listener {
         override fun onLoadingChanged(isLoading: Boolean) {
             pbLoading?.visibility = if (isLoading) View.VISIBLE else View.GONE
         }

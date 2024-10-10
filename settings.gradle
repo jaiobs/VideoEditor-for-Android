@@ -6,3 +6,4 @@
  */
 
 include ':app'
+include ':videoeditor'
