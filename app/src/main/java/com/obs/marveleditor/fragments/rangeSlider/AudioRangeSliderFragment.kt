@@ -7,55 +7,23 @@
 
 package com.obs.marveleditor.fragments.rangeSlider
 
-import android.Manifest
-import android.app.Activity
-import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.provider.Settings
-import androidx.core.app.ActivityCompat
-import androidx.appcompat.widget.AppCompatButton
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.appcompat.widget.AppCompatTextView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
-import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.fragment.app.DialogFragment
-import com.obs.marveleditor.utils.OptiConstant
-import com.obs.marveleditor.R
-import com.obs.marveleditor.interfaces.OptiFFMpegCallback
-import com.obs.marveleditor.utils.VideoUtils.buildMediaSource
-import com.obs.marveleditor.utils.VideoUtils.secToTime
-import com.obs.marveleditor.utils.VideoFrom
-import com.obs.marveleditor.interfaces.OptiDialogueHelper
-import com.github.guilhe.views.SeekBarRangedView
-import com.github.guilhe.views.addActionListener
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.util.Util
-import com.obs.marveleditor.OptiVideoEditor
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.marveleditor.databinding.FragmentAudioRangeSliderBinding
-import com.obs.marveleditor.fragments.OptiBaseCreatorDialogFragment
-import com.obs.marveleditor.utils.OptiCommonMethods
 import com.obs.marveleditor.utils.OptiUtils
-import com.obs.marveleditor.utils.saveMediaToFile
 import java.io.File
-import kotlin.math.roundToLong
 
-class AudioRangeSliderFragment : DialogFragment() {
+class AudioRangeSliderFragment : BottomSheetDialogFragment() {
 
 
     companion object {
@@ -79,16 +47,41 @@ class AudioRangeSliderFragment : DialogFragment() {
 
     private lateinit var audioFilePath: String
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         super.onCreateView(inflater, container, savedInstanceState)
         _binding = FragmentAudioRangeSliderBinding.inflate(layoutInflater)
-        audioFilePath = arguments?.getString(AUDIO_FILE_PATH) ?: ""
         return binding.root
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        audioFilePath = arguments?.getString(AUDIO_FILE_PATH) ?: ""
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initAudioView()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        setFullScreenHeight()
+    }
+
+    private fun setFullScreenHeight() {
+        val dialog = dialog as BottomSheetDialog
+        val bottomSheet =
+            dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+        bottomSheet?.layoutParams?.height = ViewGroup.LayoutParams.MATCH_PARENT
+
+        val behavior = BottomSheetBehavior.from(bottomSheet!!)
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        behavior.skipCollapsed = true
+
     }
 
     private fun initAudioView() {
@@ -101,77 +94,66 @@ class AudioRangeSliderFragment : DialogFragment() {
         binding.seekBarAudioProgress.setSampleFrom(audioFile)
 
         val audioSelectViewWidth = screenWidth / 3
-        // Set the width of audioSelectView to be a third of the screen width
         binding.audioSelectView.updateLayoutParams<ConstraintLayout.LayoutParams> {
             width = audioSelectViewWidth
         }
 
         val timeInMillis = OptiUtils.getVideoDuration(requireContext(), audioFile)
         val audioLength = (timeInMillis / 1000).toFloat() // Length of the audio in seconds
-        val frameSize = 10f // Fixed 30-second frame
+        val frameSize = 10f
 
         binding.audioSelectView.post {
             // Calculate width for the seekBarAudioProgress based on audio length
             binding.seekBarAudioProgress.updateLayoutParams<FrameLayout.LayoutParams> {
                 val seekBarWidth = (audioSelectViewWidth / frameSize) * audioLength
                 width = seekBarWidth.toInt()
-                val remainingHorizontalArea = binding.clParent.width - audioSelectViewWidth
+                val remainingHorizontalArea = binding.clAudioSelector.width - audioSelectViewWidth
                 marginStart = remainingHorizontalArea / 2
                 marginEnd = remainingHorizontalArea / 2
             }
         }
 
 
-        // Setup RangeSlider
         binding.rangeSlider.valueFrom = 0f
         binding.rangeSlider.valueTo = audioLength
         binding.rangeSlider.setValues(0f, frameSize)
+        updateSelectedTime(0, frameSize.toInt())
 
 
         // Update RangeSlider when user scrolls through the audio selector
         binding.audioScroller.setOnScrollChangeListener { _, scrollX, _, _, _ ->
             // Get maximum scrollable width (total width - visible width)
             val maxScroll = binding.audioScroller.getChildAt(0).width - binding.audioScroller.width
-
             // Calculate scroll ratio (how far we have scrolled compared to total scrollable width)
             val scrollRatio = scrollX.toFloat() / maxScroll.toFloat()
-
             // Calculate new start position in the audio based on scroll ratio
             val newStartPosition = scrollRatio * (audioLength - frameSize)
+            val newEndPosition = minOf(newStartPosition + frameSize, audioLength)
 
-            // Set new values for the range slider
-            binding.rangeSlider.setValues(newStartPosition, newStartPosition + frameSize)
-
-            // Update the displayed selected range time
-            binding.selectedRangeTime.text = formatTime(newStartPosition.toInt()) + " - " +
-                    formatTime((newStartPosition + frameSize).toInt())
+            binding.rangeSlider.setValues(newStartPosition, newEndPosition)
+            updateSelectedTime(newStartPosition.toInt(), newEndPosition.toInt())
         }
 
         // Update the scrolling position when the user changes the RangeSlider
         binding.rangeSlider.addOnChangeListener { slider, _, _ ->
             val startPosition = slider.values[0]
-            var endPosition = startPosition + frameSize
+            val endPosition = minOf(startPosition + frameSize, audioLength)
 
-            if (endPosition > audioLength) {
-                endPosition = audioLength
-            }
-
-            // Set the second thumb to always be 30 seconds ahead of the first thumb
+            // Set the thumbs to indicated the frameSize
             slider.setValues(startPosition, endPosition)
+            updateSelectedTime(startPosition.toInt(), endPosition.toInt())
 
             // Calculate the scroll position based on the new start time
             val maxScroll = binding.audioScroller.getChildAt(0).width - binding.audioScroller.width
             val scrollPosition = (startPosition / (audioLength - frameSize)) * maxScroll
-
-            // Smoothly scroll to the calculated position
             binding.audioScroller.smoothScrollTo(scrollPosition.toInt(), 0)
-
-            // Update the time labels
-            binding.selectedRangeTime.text = formatTime(startPosition.toInt()) + " - " + formatTime(endPosition.toInt())
         }
     }
 
-    // Helper function to format time into MM:SS
+    private fun updateSelectedTime(startPosition: Int, endPosition: Int) {
+        binding.selectedRangeTime.text = formatTime(startPosition) + " - " + formatTime(endPosition)
+    }
+
     private fun formatTime(seconds: Int): String {
         val minutes = seconds / 60
         val secs = seconds % 60
