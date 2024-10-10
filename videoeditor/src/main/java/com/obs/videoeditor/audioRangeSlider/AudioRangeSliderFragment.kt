@@ -202,12 +202,18 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
                     pauseAudio()
                     return@launch
                 }
-                val progress = (currentPosition.toFloat() / audioLengthMillis) * 100f
-                binding.seekBarAudioProgress.progress = progress
+                updateAudioWaveProgress(currentPosition)
                 delay(150)
             }
         }
     }
+
+    private fun updateAudioWaveProgress(playerPosMillis: Long) {
+        val progress = (playerPosMillis.toFloat() / audioLengthMillis) * 100f
+        if (progress < 0 || progress > 100f)    return
+        binding.seekBarAudioProgress.progress = progress
+    }
+
 
     private fun stopUpdatingAudioWave() {
         progressUpdateJob?.cancel()
@@ -217,6 +223,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
         val startPosMillis = (startPosSeconds * 1000).toLong()
         exoPlayer?.seekTo(startPosMillis)
         exoPlayer?.play()
+        updateAudioWaveProgress(startPosMillis)
     }
 
     private fun pauseAudio() {
