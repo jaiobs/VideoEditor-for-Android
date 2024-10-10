@@ -11,6 +11,6 @@
 
     <stroke
             android:width="4dp"
-            android:color="@color/text_grey"/>
+            android:color="@color/border_grey"/>
     <corners android:radius="5dp"/>
 </shape>

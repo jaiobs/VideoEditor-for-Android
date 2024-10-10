@@ -8,13 +8,16 @@
 package com.obs.videoeditor.audioRangeSlider
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
+import com.obs.videoeditor.R
 import com.obs.videoeditor.databinding.AudioRangeSelectorBinding
 import java.io.File
 
@@ -37,6 +40,16 @@ class AudioRangeSelector @JvmOverloads constructor(
         _binding = AudioRangeSelectorBinding.inflate(
             LayoutInflater.from(context), this, true
         )
+
+        binding.rangeSlider.apply {
+            trackActiveTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(context, R.color.white)
+            )
+            trackInactiveTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(context, R.color.slider_track_grey)
+            )
+
+        }
 //        initializeViews()
     }
 
