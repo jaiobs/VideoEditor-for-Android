@@ -139,6 +139,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment() {
         }
 
         binding.seekBarAudioProgress.setSampleFrom(audioFile)
+        binding.seekBarAudioProgress.isEnabled = false
 
         val audioSelectViewWidth = screenWidth / 3
         binding.audioSelectView.updateLayoutParams<ConstraintLayout.LayoutParams> {
