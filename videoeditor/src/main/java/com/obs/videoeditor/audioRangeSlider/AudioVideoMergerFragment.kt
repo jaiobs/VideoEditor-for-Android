@@ -1,7 +1,6 @@
 package com.obs.videoeditor.audioRangeSlider
 
 import android.content.Context
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -26,24 +25,22 @@ import com.obs.videoeditor.editor.OptiConstant
 import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.videoeditor.utils.CustomLoadingDialog
+import com.obs.videoeditor.utils.VideoEditorUtils.createAudioFile
+import com.obs.videoeditor.utils.VideoEditorUtils.createVideoFile
+import com.obs.videoeditor.utils.VideoEditorUtils.getVideoDuration
+import com.obs.videoeditor.utils.VideoEditorUtils.millisecondToTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 
 private const val s = "Audio File Path is blank"
 
 class AudioVideoMergerFragment : BottomSheetDialogFragment(),
-        AudioRangeSelector.AudioRangeSelectorListener
-{
-
+    AudioRangeSelector.AudioRangeSelectorListener {
 
     companion object {
         const val VIDEO_FILE_PATH = "VIDEO_FILE_PATH"
@@ -89,10 +86,6 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         super.onCreateView(inflater, container, savedInstanceState)
         _binding = FragmentAudioVideoMergerBinding.inflate(layoutInflater)
         return binding.root
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -148,7 +141,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
             override fun onPlayerErrorChanged(error: PlaybackException?) {
                 super.onPlayerErrorChanged(error)
-                showErrorLayout(getString(R.string.failed_to_play_audio) + "\n" + error?.message )
+                showErrorLayout(getString(R.string.failed_to_play_audio) + "\n" + error?.message)
                 Log.e("TEST_exo", "onPlayerErrorChanged: error = $error")
             }
         })
@@ -175,13 +168,13 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
-                showErrorLayout(getString(R.string.failed_to_play_video) + "\n" + error.message )
+                showErrorLayout(getString(R.string.failed_to_play_video) + "\n" + error.message)
                 Log.e("TEST_exo", "videoExo - onPlayerError: error = $error")
             }
 
             override fun onPlayerErrorChanged(error: PlaybackException?) {
                 super.onPlayerErrorChanged(error)
-                showErrorLayout(getString(R.string.failed_to_play_video) + "\n" + error?.message )
+                showErrorLayout(getString(R.string.failed_to_play_video) + "\n" + error?.message)
                 Log.e("TEST_exo", "videoExo - onPlayerErrorChanged: error = $error")
             }
         })
@@ -366,56 +359,9 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
     }
 
-    private fun getVideoDuration(context: Context, file: File): Long{
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, Uri.fromFile(file))
-        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: "0"
-        val timeInMillis = time.toLong()
-        retriever.release()
-        return timeInMillis
-    }
-
-    private fun createAudioFile(context: Context): File {
-        val imageFileName: String = getFileNameWithTime()
-        val storageDir: File? = context.filesDir
-        return File.createTempFile(imageFileName, OptiConstant.AUDIO_FORMAT, storageDir)
-    }
-
-    private fun createVideoFile(context: Context): File {
-        val imageFileName: String = getFileNameWithTime()
-        val storageDir: File? = context.filesDir
-        return File.createTempFile(imageFileName, OptiConstant.VIDEO_FORMAT, storageDir)
-    }
-
-    private fun getFileNameWithTime(): String {
-        val timeStamp: String = getFormattedTime()
-        val imageFileName: String = OptiConstant.APP_NAME + timeStamp + "_"
-        return imageFileName
-    }
-
-    private fun getFormattedTime(): String {
-        val timeStamp: String =
-            SimpleDateFormat(OptiConstant.DATE_FORMAT, Locale.getDefault()).format(Date())
-        return timeStamp
-    }
-
-    private fun millisecondToTime(totalSeconds: Long): String {
-        return String.format(
-            "%02d:%02d:%02d",
-            TimeUnit.MILLISECONDS.toHours(totalSeconds),
-            TimeUnit.MILLISECONDS.toMinutes(totalSeconds) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalSeconds)),
-            TimeUnit.MILLISECONDS.toSeconds(totalSeconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalSeconds))
-        )
-    }
-
-    private fun toast(msg: String) {
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-    }
 
     private fun showLoadingDialog() = activity?.runOnUiThread {
-        if (loadingDialog == null) {
-            loadingDialog = CustomLoadingDialog()
-        }
+        if (loadingDialog == null) loadingDialog = CustomLoadingDialog()
         activity?.let { mActivity -> loadingDialog?.show(mActivity) }
     }
 
@@ -424,7 +370,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         loadingDialog = null
     }
 
-    interface AvMergerCallbackListener{
+    interface AvMergerCallbackListener {
         fun onAudioVideoMerged(mergedVideoFile: File)
     }
 }
