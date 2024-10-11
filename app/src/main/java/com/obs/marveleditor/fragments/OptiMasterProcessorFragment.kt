@@ -48,7 +48,7 @@ import com.obs.marveleditor.OptiTrimmerActivity
 import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.marveleditor.R
 import com.obs.marveleditor.adapter.OptiVideoOptionsAdapter
-import com.obs.videoeditor.audioRangeSlider.AudioVideoMergerFragment
+import com.obs.videoeditor.avmerger.AudioVideoMergerFragment
 import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.marveleditor.interfaces.OptiVideoOptionListener
 import com.obs.marveleditor.utils.OptiCommonMethods
@@ -57,6 +57,7 @@ import com.obs.marveleditor.utils.OptiSessionManager
 import com.obs.marveleditor.utils.OptiUtils
 import com.obs.marveleditor.utils.VideoFrom
 import com.obs.marveleditor.utils.VideoUtils
+import com.obs.videoeditor.avmerger.AudioVideoMergerBS
 import com.obs.videoeditor.editor.isAndroidQAndAbove
 import com.obs.videoeditor.editor.saveMediaToFile
 import java.io.File
@@ -65,7 +66,7 @@ import java.util.Date
 import java.util.Locale
 
 class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.CallBacks, OptiVideoOptionListener,
-    OptiFFMpegCallback, AudioVideoMergerFragment.AvMergerCallbackListener {
+    OptiFFMpegCallback, AudioVideoMergerBS.AvMergerBSListener {
 
     private var tagName: String = OptiMasterProcessorFragment::class.java.simpleName
     private lateinit var rootView: View
@@ -545,11 +546,14 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
                 val audioFilePath = requireContext().saveMediaToFile(uri)
                 if (masterVideoFile != null && File(audioFilePath).exists()) {
                     releasePlayer()
-                    val fragment = AudioVideoMergerFragment.newInstance(
+                    val avMergerBottomSheet = AudioVideoMergerBS.newInstance(
                         videoFilePath = masterVideoFile!!.path,
                         audioFilePath = audioFilePath,
                     )
-                    fragment.show(childFragmentManager, AudioVideoMergerFragment::class.simpleName)
+                    avMergerBottomSheet.show(
+                        childFragmentManager,
+                        AudioVideoMergerBS::class.java.simpleName
+                    )
 
                 } else if (masterVideoFile == null) {
                     OptiUtils.showGlideToast(

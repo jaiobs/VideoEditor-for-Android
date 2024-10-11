@@ -1,4 +1,11 @@
-package com.obs.videoeditor.audioRangeSlider
+/*
+ *
+ *  Created by Optisol on Aug 2019.
+ *  Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
+ *
+ */
+
+package com.obs.videoeditor.avmerger
 
 import android.content.Context
 import android.net.Uri
@@ -7,9 +14,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
@@ -20,15 +27,13 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.obs.videoeditor.R
+import com.obs.videoeditor.avmerger.audioRangeSelector.AudioRangeSelector
 import com.obs.videoeditor.databinding.FragmentAudioVideoMergerBinding
 import com.obs.videoeditor.editor.OptiConstant
 import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.videoeditor.utils.CustomLoadingDialog
-import com.obs.videoeditor.utils.VideoEditorUtils.createAudioFile
-import com.obs.videoeditor.utils.VideoEditorUtils.createVideoFile
-import com.obs.videoeditor.utils.VideoEditorUtils.getVideoDuration
-import com.obs.videoeditor.utils.VideoEditorUtils.millisecondToTime
+import com.obs.videoeditor.utils.VideoEditorUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,10 +41,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 
-
-private const val s = "Audio File Path is blank"
-
-class AudioVideoMergerFragment : BottomSheetDialogFragment(),
+class AudioVideoMergerFragment : Fragment(),
     AudioRangeSelector.AudioRangeSelectorListener {
 
     companion object {
@@ -101,18 +103,13 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         } else {
             audioFile = File(audioFilePath)
             videoFile = File(videoFilePath)
-            audioLengthMillis = getVideoDuration(requireContext(), audioFile)
-            val vidTimeInMillis = getVideoDuration(requireContext(), videoFile)
+            audioLengthMillis = VideoEditorUtils.getVideoDuration(requireContext(), audioFile)
+            val vidTimeInMillis = VideoEditorUtils.getVideoDuration(requireContext(), videoFile)
             frameSizeSeconds = (vidTimeInMillis / 1000).toFloat()
             setupAudioExoPlayer()
             setupVideoExoPlayer()
             initViews()
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        setFullScreenHeight()
     }
 
     private fun setupAudioExoPlayer() {
@@ -148,8 +145,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
     }
 
     private fun setupVideoExoPlayer() {
-        exoPlayerVideo = ExoPlayer
-            .Builder(requireContext())
+        exoPlayerVideo = ExoPlayer.Builder(requireContext())
             .setRenderersFactory(
                 DefaultRenderersFactory(requireContext())
                     .setEnableDecoderFallback(true)
@@ -200,17 +196,17 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         binding.errorLayout.isVisible = true
         binding.tvError.text = errorMsg
         binding.btnClose.setOnClickListener {
-            dismissAllowingStateLoss()
+            listener?.close()
         }
     }
 
     private fun trimAudioFile() {
-        val outputFile = createAudioFile(requireContext())
+        val outputFile = VideoEditorUtils.createAudioFile(requireContext())
         Log.v("TEST_audio", "outputFile: ${outputFile.absolutePath}")
 
         val (startTimeMillis, endTimeMillis) = binding.audioRangeSelector.getSelectedTimeRange()
-        val startTime = millisecondToTime(startTimeMillis)
-        val endTime = millisecondToTime(endTimeMillis)
+        val startTime = VideoEditorUtils.millisecondToTime(startTimeMillis)
+        val endTime = VideoEditorUtils.millisecondToTime(endTimeMillis)
 
         showLoadingDialog()
 
@@ -237,7 +233,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
     private fun mergeAudioVideo() {
         //output file is generated and send to video processing
-        val outputFile = createVideoFile(requireContext())
+        val outputFile = VideoEditorUtils.createVideoFile(requireContext())
         Log.v("TEST_audio", "outputFile for video: ${outputFile.absolutePath}")
 
         val optiVideoEditor = OptiVideoEditor.with(requireContext())
@@ -249,7 +245,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
                 override fun onSuccess(convertedFile: File, type: String) {
                     hideLoadingDialog()
                     listener?.onAudioVideoMerged(convertedFile)
-                    dismissAllowingStateLoss()
+                    listener?.close()
                 }
 
                 override fun onFailure(error: Exception) {
@@ -347,19 +343,6 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
     }
 
 
-    private fun setFullScreenHeight() {
-        val dialog = dialog as BottomSheetDialog
-        val bottomSheet =
-            dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-        bottomSheet?.layoutParams?.height = ViewGroup.LayoutParams.MATCH_PARENT
-
-        val behavior = BottomSheetBehavior.from(bottomSheet!!)
-        behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        behavior.skipCollapsed = true
-
-    }
-
-
     private fun showLoadingDialog() = activity?.runOnUiThread {
         if (loadingDialog == null) loadingDialog = CustomLoadingDialog()
         activity?.let { mActivity -> loadingDialog?.show(mActivity) }
@@ -372,5 +355,6 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
     interface AvMergerCallbackListener {
         fun onAudioVideoMerged(mergedVideoFile: File)
+        fun close()
     }
 }

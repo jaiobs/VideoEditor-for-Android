@@ -34,7 +34,7 @@
                 app:use_controller="false"
                 android:layout_marginVertical="@dimen/_16sdp"/>
 
-        <com.obs.videoeditor.audioRangeSlider.AudioRangeSelector
+        <com.obs.videoeditor.avmerger.audioRangeSelector.AudioRangeSelector
                 android:id="@+id/audioRangeSelector"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

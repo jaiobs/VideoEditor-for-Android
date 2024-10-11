@@ -5,7 +5,14 @@
  *
  */
 
-package com.obs.videoeditor.audioRangeSlider
+/*
+ *
+ *  Created by Optisol on Aug 2019.
+ *  Copyright © 2019 Optisol Business Solutions pvt ltd. All rights reserved.
+ *
+ */
+
+package com.obs.videoeditor.avmerger.audioRangeSelector
 
 import android.content.Context
 import android.content.res.ColorStateList
@@ -14,7 +21,6 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
