@@ -1,37 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/clParent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/editorBackgroundColor"
         android:orientation="vertical">
 
-    <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/done"
-            android:backgroundTint="@color/colorAccent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-    <com.google.android.exoplayer2.ui.PlayerView
-            android:id="@+id/videoPlayerView"
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clContainer"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@color/editorBackgroundColor"
-            app:layout_constraintTop_toBottomOf="@id/btnDone"
-            app:layout_constraintBottom_toTopOf="@id/audioRangeSelector"
-            app:use_controller="false"
-            android:layout_marginVertical="@dimen/_16sdp"/>
+            android:layout_height="match_parent" >
 
-    <com.obs.videoeditor.audioRangeSlider.AudioRangeSelector
-            android:id="@+id/audioRangeSelector"
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/done"
+                android:backgroundTint="@color/transparent"
+                android:textColor="@color/editorColorOnBackground"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+        <com.google.android.exoplayer2.ui.PlayerView
+                android:id="@+id/videoPlayerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@color/editorBackgroundColor"
+                app:layout_constraintTop_toBottomOf="@id/btnDone"
+                app:layout_constraintBottom_toTopOf="@id/audioRangeSelector"
+                app:use_controller="false"
+                android:layout_marginVertical="@dimen/_16sdp"/>
+
+        <com.obs.videoeditor.audioRangeSlider.AudioRangeSelector
+                android:id="@+id/audioRangeSelector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/errorLayout"
+            android:visibility="gone"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+        <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Couldn't load Audio File"
+                android:textSize="@dimen/_12ssp"
+                android:textColor="@color/editorColorOnBackground" />
+
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/close"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:backgroundTint="@color/red"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

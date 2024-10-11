@@ -7,4 +7,11 @@
 
 <resources>
     <string name="done">Done</string>
+    <string name="audio_file_not_found">Audio file not found</string>
+    <string name="video_file_not_found">Video file not found</string>
+    <string name="failed_to_play_audio">Failed to play audio</string>
+    <string name="failed_to_play_video">Failed to play video</string>
+    <string name="loading">Loading</string>
+    <string name="failed_to_trim_audio">Failed to trim audio</string>
+    <string name="close">Close</string>
 </resources>

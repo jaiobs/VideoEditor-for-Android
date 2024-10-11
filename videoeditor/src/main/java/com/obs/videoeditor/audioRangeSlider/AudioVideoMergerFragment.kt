@@ -10,7 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
@@ -18,10 +20,12 @@ import com.google.android.exoplayer2.Player
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.obs.videoeditor.R
 import com.obs.videoeditor.databinding.FragmentAudioVideoMergerBinding
 import com.obs.videoeditor.editor.OptiConstant
 import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.videoeditor.editor.OptiVideoEditor
+import com.obs.videoeditor.utils.CustomLoadingDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,6 +36,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+
+
+private const val s = "Audio File Path is blank"
 
 class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         AudioRangeSelector.AudioRangeSelectorListener
@@ -72,6 +79,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
     private var currStartPositionMillis: Long = 0L
 
     private var progressUpdateJob: Job? = null
+    private var loadingDialog: CustomLoadingDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -94,9 +102,9 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         audioFilePath = arguments?.getString(AUDIO_FILE_PATH) ?: ""
 
         if (File(audioFilePath).exists().not()) {
-            Toast.makeText(requireContext(), "Audio File Path is blank", Toast.LENGTH_SHORT).show()
+            showErrorLayout(getString(R.string.audio_file_not_found))
         } else if (File(videoFilePath).exists().not()) {
-            Toast.makeText(requireContext(), "Video File Path is blank", Toast.LENGTH_SHORT).show()
+            showErrorLayout(getString(R.string.video_file_not_found))
         } else {
             audioFile = File(audioFilePath)
             videoFile = File(videoFilePath)
@@ -134,18 +142,26 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
+                showErrorLayout(errorMsg = getString(R.string.failed_to_play_audio) + "\n" + error.message)
                 Log.e("TEST_exo", "onPlayerError: error = $error")
             }
 
             override fun onPlayerErrorChanged(error: PlaybackException?) {
                 super.onPlayerErrorChanged(error)
+                showErrorLayout(getString(R.string.failed_to_play_audio) + "\n" + error?.message )
                 Log.e("TEST_exo", "onPlayerErrorChanged: error = $error")
             }
         })
     }
 
     private fun setupVideoExoPlayer() {
-        exoPlayerVideo = ExoPlayer.Builder(requireContext()).build()
+        exoPlayerVideo = ExoPlayer
+            .Builder(requireContext())
+            .setRenderersFactory(
+                DefaultRenderersFactory(requireContext())
+                    .setEnableDecoderFallback(true)
+            )
+            .build()
 
         val mediaItem = MediaItem.fromUri(Uri.parse(videoFilePath))
         exoPlayerVideo?.setMediaItem(mediaItem)
@@ -159,32 +175,39 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
 
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
+                showErrorLayout(getString(R.string.failed_to_play_video) + "\n" + error.message )
                 Log.e("TEST_exo", "videoExo - onPlayerError: error = $error")
             }
 
             override fun onPlayerErrorChanged(error: PlaybackException?) {
                 super.onPlayerErrorChanged(error)
+                showErrorLayout(getString(R.string.failed_to_play_video) + "\n" + error?.message )
                 Log.e("TEST_exo", "videoExo - onPlayerErrorChanged: error = $error")
             }
         })
     }
 
     private fun initViews() {
-        if (audioFile?.exists() == false) {
-            Toast.makeText(requireContext(), "Audio File Path is blank", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         binding.audioRangeSelector.initializeViews(
-            audioFile = audioFile!!,
+            audioFile = audioFile,
             audioLengthMillis = audioLengthMillis,
             frameSizeSeconds = frameSizeSeconds,
             listener = this
         )
 
-
         binding.btnDone.setOnClickListener {
             trimAudioFile()
+        }
+    }
+
+    private fun showErrorLayout(errorMsg: String) {
+        hideLoadingDialog()
+        releasePlayers()
+        binding.clContainer.isVisible = false
+        binding.errorLayout.isVisible = true
+        binding.tvError.text = errorMsg
+        binding.btnClose.setOnClickListener {
+            dismissAllowingStateLoss()
         }
     }
 
@@ -196,8 +219,8 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         val startTime = millisecondToTime(startTimeMillis)
         val endTime = millisecondToTime(endTimeMillis)
 
+        showLoadingDialog()
 
-        // TODO - show progress bar
         val optiVideoEditor = OptiVideoEditor.with(requireContext())
             .setType(OptiConstant.AUDIO_TRIM)
             .setAudioFile(audioFile)
@@ -211,7 +234,7 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
                 }
 
                 override fun onFailure(error: Exception) {
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_SHORT).show()
+                    showErrorLayout(errorMsg = getString(R.string.failed_to_trim_audio) + "\n" + error.message)
                     error.printStackTrace()
                 }
 
@@ -231,12 +254,14 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
             .setOutputPath(outputFile.path)
             .setCallback(object : OptiFFMpegCallback {
                 override fun onSuccess(convertedFile: File, type: String) {
+                    hideLoadingDialog()
                     listener?.onAudioVideoMerged(convertedFile)
                     dismissAllowingStateLoss()
                 }
 
                 override fun onFailure(error: Exception) {
-                    Toast.makeText(requireContext(), error.message, Toast.LENGTH_SHORT).show()
+                    hideLoadingDialog()
+                    showErrorLayout(errorMsg = getString(R.string.failed_to_trim_audio) + "\n" + error.message)
                     error.printStackTrace()
                 }
 
@@ -284,6 +309,11 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         exoPlayerAudio?.pause()
     }
 
+    private fun releasePlayers() {
+        exoPlayerAudio?.release()
+        exoPlayerVideo?.release()
+    }
+
 
     override fun updateStartPosition(startPosMillis: Long) {
         currStartPositionMillis = startPosMillis
@@ -298,11 +328,12 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        hideLoadingDialog()
     }
 
     override fun onDestroy() {
+        releasePlayers()
         super.onDestroy()
-        exoPlayerAudio?.release()
     }
 
 
@@ -375,6 +406,22 @@ class AudioVideoMergerFragment : BottomSheetDialogFragment(),
             TimeUnit.MILLISECONDS.toMinutes(totalSeconds) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalSeconds)),
             TimeUnit.MILLISECONDS.toSeconds(totalSeconds) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalSeconds))
         )
+    }
+
+    private fun toast(msg: String) {
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showLoadingDialog() = activity?.runOnUiThread {
+        if (loadingDialog == null) {
+            loadingDialog = CustomLoadingDialog()
+        }
+        activity?.let { mActivity -> loadingDialog?.show(mActivity) }
+    }
+
+    private fun hideLoadingDialog() = activity?.runOnUiThread {
+        loadingDialog?.dismiss()
+        loadingDialog = null
     }
 
     interface AvMergerCallbackListener{

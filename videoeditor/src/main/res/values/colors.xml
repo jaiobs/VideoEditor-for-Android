@@ -11,14 +11,13 @@
     <color name="colorPrimaryDark">#808080</color>
     <color name="colorAccent">#4DC662</color>
 
-    <color name="colorOnBackground">#000000</color>
-    <color name="backgroundColor">#ffffff</color>
-
     <color name="editorBackgroundColor">#000000</color>
+    <color name="dark_panel">#232323</color>
     <color name="editorColorOnBackground">#ffffff</color>
 
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
+    <color name="transparent">#00000000</color>
     <color name="slider_track_grey">#505153</color>
     <color name="border_grey">#dbdbdb</color>
 
