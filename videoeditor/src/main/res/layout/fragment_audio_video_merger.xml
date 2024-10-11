@@ -5,7 +5,7 @@
         android:id="@+id/clParent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/black"
+        android:background="@color/editorBackgroundColor"
         android:orientation="vertical">
 
     <com.google.android.material.button.MaterialButton
@@ -16,6 +16,16 @@
             android:backgroundTint="@color/colorAccent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
+
+    <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/videoPlayerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/editorBackgroundColor"
+            app:layout_constraintTop_toBottomOf="@id/btnDone"
+            app:layout_constraintBottom_toTopOf="@id/audioRangeSelector"
+            app:use_controller="false"
+            android:layout_marginVertical="@dimen/_16sdp"/>
 
     <com.obs.videoeditor.audioRangeSlider.AudioRangeSelector
             android:id="@+id/audioRangeSelector"

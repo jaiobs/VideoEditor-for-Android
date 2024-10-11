@@ -48,7 +48,7 @@ import com.obs.marveleditor.OptiTrimmerActivity
 import com.obs.videoeditor.editor.OptiVideoEditor
 import com.obs.marveleditor.R
 import com.obs.marveleditor.adapter.OptiVideoOptionsAdapter
-import com.obs.videoeditor.audioRangeSlider.AudioRangeSliderFragment
+import com.obs.videoeditor.audioRangeSlider.AudioVideoMergerFragment
 import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.marveleditor.interfaces.OptiVideoOptionListener
 import com.obs.marveleditor.utils.OptiCommonMethods
@@ -65,7 +65,7 @@ import java.util.Date
 import java.util.Locale
 
 class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.CallBacks, OptiVideoOptionListener,
-    OptiFFMpegCallback, AudioRangeSliderFragment.AvMergerCallbackListener {
+    OptiFFMpegCallback, AudioVideoMergerFragment.AvMergerCallbackListener {
 
     private var tagName: String = OptiMasterProcessorFragment::class.java.simpleName
     private lateinit var rootView: View
@@ -545,11 +545,11 @@ class OptiMasterProcessorFragment : Fragment(), OptiBaseCreatorDialogFragment.Ca
                 val audioFilePath = requireContext().saveMediaToFile(uri)
                 if (masterVideoFile != null && File(audioFilePath).exists()) {
                     releasePlayer()
-                    val fragment = AudioRangeSliderFragment.newInstance(
+                    val fragment = AudioVideoMergerFragment.newInstance(
                         videoFilePath = masterVideoFile!!.path,
                         audioFilePath = audioFilePath,
                     )
-                    fragment.show(childFragmentManager, AudioRangeSliderFragment::class.simpleName)
+                    fragment.show(childFragmentManager, AudioVideoMergerFragment::class.simpleName)
 
                 } else if (masterVideoFile == null) {
                     OptiUtils.showGlideToast(

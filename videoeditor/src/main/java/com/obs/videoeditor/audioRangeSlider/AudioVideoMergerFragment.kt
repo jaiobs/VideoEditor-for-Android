@@ -18,7 +18,7 @@ import com.google.android.exoplayer2.Player
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.obs.videoeditor.databinding.FragmentAudioRangeSliderBinding
+import com.obs.videoeditor.databinding.FragmentAudioVideoMergerBinding
 import com.obs.videoeditor.editor.OptiConstant
 import com.obs.videoeditor.editor.OptiFFMpegCallback
 import com.obs.videoeditor.editor.OptiVideoEditor
@@ -33,7 +33,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class AudioRangeSliderFragment : BottomSheetDialogFragment(),
+class AudioVideoMergerFragment : BottomSheetDialogFragment(),
         AudioRangeSelector.AudioRangeSelectorListener
 {
 
@@ -45,7 +45,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
         fun newInstance(
             videoFilePath: String,
             audioFilePath: String,
-        ) = AudioRangeSliderFragment().apply {
+        ) = AudioVideoMergerFragment().apply {
             arguments = bundleOf(
                 VIDEO_FILE_PATH to videoFilePath,
                 AUDIO_FILE_PATH to audioFilePath,
@@ -53,15 +53,17 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
         }
     }
 
-    private var _binding: FragmentAudioRangeSliderBinding? = null
-    private val binding: FragmentAudioRangeSliderBinding
+    private var _binding: FragmentAudioVideoMergerBinding? = null
+    private val binding: FragmentAudioVideoMergerBinding
         get() = requireNotNull(_binding)
 
     private var listener: AvMergerCallbackListener? = null
 
+    private var exoPlayerAudio: ExoPlayer? = null
+    private var exoPlayerVideo: ExoPlayer? = null
+
     private lateinit var audioFilePath: String
     private lateinit var videoFilePath: String
-    private var exoPlayer: ExoPlayer? = null
     private var frameSizeSeconds: Float = 1f
 
     private lateinit var videoFile: File
@@ -77,7 +79,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
         savedInstanceState: Bundle?
     ): View {
         super.onCreateView(inflater, container, savedInstanceState)
-        _binding = FragmentAudioRangeSliderBinding.inflate(layoutInflater)
+        _binding = FragmentAudioVideoMergerBinding.inflate(layoutInflater)
         return binding.root
     }
 
@@ -101,7 +103,8 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
             audioLengthMillis = getVideoDuration(requireContext(), audioFile)
             val vidTimeInMillis = getVideoDuration(requireContext(), videoFile)
             frameSizeSeconds = (vidTimeInMillis / 1000).toFloat()
-            setupExoPlayer()
+            setupAudioExoPlayer()
+            setupVideoExoPlayer()
             initViews()
         }
     }
@@ -111,14 +114,14 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
         setFullScreenHeight()
     }
 
-    private fun setupExoPlayer() {
-        exoPlayer = ExoPlayer.Builder(requireContext()).build()
+    private fun setupAudioExoPlayer() {
+        exoPlayerAudio = ExoPlayer.Builder(requireContext()).build()
 
         val mediaItem = MediaItem.fromUri(Uri.parse(audioFilePath))
-        exoPlayer?.setMediaItem(mediaItem)
-        exoPlayer?.prepare()
+        exoPlayerAudio?.setMediaItem(mediaItem)
+        exoPlayerAudio?.prepare()
 
-        exoPlayer?.addListener(object : Player.Listener {
+        exoPlayerAudio?.addListener(object : Player.Listener {
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
@@ -137,6 +140,31 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
             override fun onPlayerErrorChanged(error: PlaybackException?) {
                 super.onPlayerErrorChanged(error)
                 Log.e("TEST_exo", "onPlayerErrorChanged: error = $error")
+            }
+        })
+    }
+
+    private fun setupVideoExoPlayer() {
+        exoPlayerVideo = ExoPlayer.Builder(requireContext()).build()
+
+        val mediaItem = MediaItem.fromUri(Uri.parse(videoFilePath))
+        exoPlayerVideo?.setMediaItem(mediaItem)
+        exoPlayerVideo?.prepare()
+        exoPlayerVideo?.playWhenReady = true
+        exoPlayerVideo?.volume = 0f
+
+        binding.videoPlayerView.player = exoPlayerVideo
+
+        exoPlayerVideo?.addListener(object : Player.Listener {
+
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
+                Log.e("TEST_exo", "videoExo - onPlayerError: error = $error")
+            }
+
+            override fun onPlayerErrorChanged(error: PlaybackException?) {
+                super.onPlayerErrorChanged(error)
+                Log.e("TEST_exo", "videoExo - onPlayerErrorChanged: error = $error")
             }
         })
     }
@@ -221,9 +249,9 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
         progressUpdateJob?.cancel()
         progressUpdateJob = lifecycleScope.launch(Dispatchers.Main) {
             while (isActive) {
-                val currentPosition = exoPlayer?.currentPosition ?: return@launch
+                val currentPosition = exoPlayerAudio?.currentPosition ?: return@launch
                 if (currentPosition >= currStartPositionMillis + (frameSizeSeconds * 1000)) {
-                    pauseAudio()
+                    pausePlayers()
                     return@launch
                 }
                 updateAudioWaveProgress(currentPosition)
@@ -243,13 +271,17 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
 
     override fun playAudioAt(startPosSeconds: Float) {
         val startPosMillis = (startPosSeconds * 1000).toLong()
-        exoPlayer?.seekTo(startPosMillis)
-        exoPlayer?.play()
+        exoPlayerAudio?.seekTo(startPosMillis)
+        exoPlayerAudio?.play()
+
+        exoPlayerVideo?.seekTo(0)
+        exoPlayerVideo?.play()
+
         updateAudioWaveProgress(startPosMillis)
     }
 
-    private fun pauseAudio() {
-        exoPlayer?.pause()
+    private fun pausePlayers() {
+        exoPlayerAudio?.pause()
     }
 
 
@@ -259,7 +291,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
 
     override fun onPause() {
         super.onPause()
-        pauseAudio()
+        pausePlayers()
         stopUpdatingAudioWave()
     }
 
@@ -270,7 +302,7 @@ class AudioRangeSliderFragment : BottomSheetDialogFragment(),
 
     override fun onDestroy() {
         super.onDestroy()
-        exoPlayer?.release()
+        exoPlayerAudio?.release()
     }
 
 

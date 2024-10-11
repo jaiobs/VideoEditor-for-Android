@@ -14,6 +14,9 @@
     <color name="colorOnBackground">#000000</color>
     <color name="backgroundColor">#ffffff</color>
 
+    <color name="editorBackgroundColor">#000000</color>
+    <color name="editorColorOnBackground">#ffffff</color>
+
     <color name="black">#000000</color>
     <color name="white">#ffffff</color>
     <color name="slider_track_grey">#505153</color>
