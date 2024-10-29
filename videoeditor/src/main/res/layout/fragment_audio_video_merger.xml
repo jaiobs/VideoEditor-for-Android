@@ -54,7 +54,7 @@
                 android:id="@+id/tvError"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Couldn't load Audio File"
+                tools:text="@string/audio_too_short"
                 android:textSize="@dimen/_12ssp"
                 android:textColor="@color/editorColorOnBackground" />
 

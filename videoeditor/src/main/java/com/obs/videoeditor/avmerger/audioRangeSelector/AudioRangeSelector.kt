@@ -17,14 +17,15 @@ package com.obs.videoeditor.avmerger.audioRangeSelector
 import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
-import com.obs.videoeditor.R
+import com.google.android.material.slider.LabelFormatter
 import com.obs.videoeditor.databinding.AudioRangeSelectorBinding
 import java.io.File
 
@@ -40,7 +41,7 @@ class AudioRangeSelector @JvmOverloads constructor(
     private var audioLengthMillis: Long = 0L
     private var listener: AudioRangeSelectorListener? = null
     private var currStartPositionMillis: Long = 0L
-    private var frameSizeSecondsMillis: Long = 0L
+    private var frameSizeMillis: Long = 0L
 
 
     init {
@@ -49,13 +50,15 @@ class AudioRangeSelector @JvmOverloads constructor(
         )
 
         with(binding) {
-            rangeSlider.trackActiveTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(context, R.color.white)
-            )
-            rangeSlider.trackInactiveTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(context, R.color.slider_track_grey)
-            )
-
+            rangeSlider.trackActiveTintList = ColorStateList.valueOf(Color.WHITE)
+            rangeSlider.trackInactiveTintList = ColorStateList.valueOf(Color.GRAY)
+            rangeSlider.thumbTintList = ColorStateList.valueOf(Color.WHITE)
+            rangeSlider.isTickVisible = false
+            rangeSlider.labelBehavior = LabelFormatter.LABEL_GONE
+            rangeSlider.trackHeight = toPx(4).toInt()
+            rangeSlider.thumbRadius = toPx(2).toInt()  // Try a small value
+            // Remove any thumb shadow or elevation
+            rangeSlider.thumbElevation = 0f  // Remove elevation to eliminate shadow
         }
 //        initializeViews()
     }
@@ -63,15 +66,14 @@ class AudioRangeSelector @JvmOverloads constructor(
     fun initializeViews(
         audioFile: File,
         audioLengthMillis: Long,
-        frameSizeSeconds: Float,
+        frameSizeMillis: Long,
         listener: AudioRangeSelectorListener,
     ) {
         this.listener = listener
         this.audioLengthMillis = audioLengthMillis
         this.currStartPositionMillis = 0L
-        this.frameSizeSecondsMillis = frameSizeSeconds.toLong() * 1000
+        this.frameSizeMillis = frameSizeMillis
 
-        binding.rangeSlider.thumbRadius = 0
 
         binding.seekBarAudioProgress.setSampleFrom(audioFile)
         binding.seekBarAudioProgress.isEnabled = false
@@ -81,25 +83,25 @@ class AudioRangeSelector @JvmOverloads constructor(
             width = audioSelectViewWidth
         }
 
-        val audioLengthSeconds = (audioLengthMillis / 1000).toFloat()
-
         binding.audioSelectView.post {
             // Calculate width for the seekBarAudioProgress based on audio length
             binding.seekBarAudioProgress.updateLayoutParams<FrameLayout.LayoutParams> {
-                val seekBarWidth = (audioSelectViewWidth / frameSizeSeconds) * audioLengthSeconds
+                val seekBarWidth = (audioSelectViewWidth.toDouble() / frameSizeMillis.toDouble()) * audioLengthMillis.toDouble()
                 width = seekBarWidth.toInt()
                 val remainingHorizontalArea = binding.clAudioSelector.width - audioSelectViewWidth
-                marginStart = remainingHorizontalArea / 2
-                marginEnd = remainingHorizontalArea / 2
+                val marginEachSide = (remainingHorizontalArea / 2) + toPx(4).toInt() // 4dp due to border width of audioSelectView
+                marginStart = marginEachSide
+                marginEnd = marginEachSide
             }
         }
 
 
         binding.rangeSlider.valueFrom = 0f
-        binding.rangeSlider.valueTo = audioLengthSeconds
-        binding.rangeSlider.setValues(0f, frameSizeSeconds)
-        updateSelectedTime(0, frameSizeSeconds.toInt())
-        listener?.playAudioAt(0f)
+        binding.rangeSlider.valueTo = audioLengthMillis.toFloat()
+        val defaultPositions = defaultPositions()
+        binding.rangeSlider.setValues(defaultPositions.first, defaultPositions.second)
+        updateSelectedTime(0L, frameSizeMillis)
+        listener.playAudioAt(0L)
 
 
         // Update RangeSlider when user scrolls through the audio selector
@@ -109,48 +111,46 @@ class AudioRangeSelector @JvmOverloads constructor(
             // Calculate scroll ratio (how far we have scrolled compared to total scrollable width)
             val scrollRatio = scrollX.toFloat() / maxScroll.toFloat()
             // Calculate new start position in the audio based on scroll ratio
-            val newStartPosition = scrollRatio * (audioLengthSeconds - frameSizeSeconds)
-            val newEndPosition = minOf(newStartPosition + frameSizeSeconds, audioLengthSeconds)
+            val start = scrollRatio * (audioLengthMillis - frameSizeMillis)
+            val end = start + frameSizeMillis
+            val (adjustedStart, adjustedEnd) = getAdjustedPositions(start, end)
 
-            binding.rangeSlider.setValues(newStartPosition, newEndPosition)
-            updateSelectedTime(newStartPosition.toInt(), newEndPosition.toInt())
-
-            listener?.playAudioAt(newStartPosition)
+            binding.rangeSlider.setValues(adjustedStart, adjustedEnd)
+            updateSelectedTime(adjustedStart.toLong(), adjustedEnd.toLong())
+            listener.playAudioAt(adjustedStart.toLong())
         }
 
         // Update the scrolling position when the user changes the RangeSlider
         binding.rangeSlider.addOnChangeListener { slider, _, fromUser ->
             if (fromUser.not())    return@addOnChangeListener
 
-            var startPosition = slider.values[0]
-            var endPosition = slider.values[1]
+            var left = slider.values[0]
+            var right = slider.values[1]
 
-            val isLeftChanged = startPosition.toLong() != (currStartPositionMillis / 1000)
-            Log.e("TEST_aud", "initializeViews: isLeftChanged = $isLeftChanged, startPos = ${startPosition.toLong()}, curr = ${currStartPositionMillis/1000}, slider.values = ${slider.values}", )
+            val isLeftChanged = left.toLong() != currStartPositionMillis
+            Log.e("TEST_aud", "initializeViews: isLeftChanged = $isLeftChanged, left = ${left.toLong()}, curr = ${currStartPositionMillis}, slider.values = ${slider.values}", )
 
+            val start: Float
+            val end: Float
             if (isLeftChanged) {
-                endPosition = startPosition + frameSizeSeconds
+                start = left
+                end = start + frameSizeMillis.toFloat()
             } else {
-                startPosition = endPosition - frameSizeSeconds
+                end = right
+                start = end - frameSizeMillis.toFloat()
             }
 
-            if (startPosition < 0) {
-                startPosition = 0f
-                endPosition = frameSizeSeconds
-            } else if (endPosition > audioLengthSeconds) {
-                endPosition = audioLengthSeconds
-                startPosition = endPosition - frameSizeSeconds
-            }
+            val (adjustedStart, adjustedEnd) = getAdjustedPositions(start, end)
 
             // Set the thumbs to indicated the frameSize
-            slider.setValues(startPosition, endPosition)
-            updateSelectedTime(startPosition.toInt(), endPosition.toInt())
+            slider.setValues(adjustedStart, adjustedEnd)
+            updateSelectedTime(adjustedStart.toLong(), adjustedEnd.toLong())
 
             // Calculate the scroll position based on the new start time
             val maxScroll = binding.audioScroller.getChildAt(0).width - binding.audioScroller.width
-            val scrollPosition = (startPosition / (audioLengthSeconds - frameSizeSeconds)) * maxScroll
+            val scrollPosition = (adjustedStart / (audioLengthMillis - frameSizeMillis)) * maxScroll
             binding.audioScroller.smoothScrollTo(scrollPosition.toInt(), 0)
-            listener?.playAudioAt(startPosition)
+            listener.playAudioAt(adjustedStart.toLong())
         }
     }
 
@@ -161,24 +161,51 @@ class AudioRangeSelector @JvmOverloads constructor(
     }
 
     fun getSelectedTimeRange(): Pair<Long, Long> {
-        return Pair(currStartPositionMillis, currStartPositionMillis + frameSizeSecondsMillis)
+        return Pair(currStartPositionMillis, currStartPositionMillis + frameSizeMillis)
     }
 
-    private fun updateSelectedTime(startPosition: Int, endPosition: Int) {
-        currStartPositionMillis = startPosition.toLong() * 1000
+    private fun getAdjustedPositions(
+        start: Float?,
+        end: Float?
+    ): Pair<Float, Float> {
+        val defaultPositions = defaultPositions()
+
+        var newStartPosition = start ?: defaultPositions.first
+        var newEndPosition = end ?: defaultPositions.second
+
+        if (newStartPosition < 0) {
+            newStartPosition = 0f
+            newEndPosition = frameSizeMillis.toFloat()
+        } else if (newEndPosition > audioLengthMillis) {
+            newEndPosition = audioLengthMillis.toFloat()
+            newStartPosition = newEndPosition - frameSizeMillis.toFloat()
+        }
+        return Pair(newStartPosition, newEndPosition)
+    }
+
+    private fun defaultPositions() = Pair(0f, frameSizeMillis.toFloat())
+
+
+    private fun updateSelectedTime(startPosition: Long, endPosition: Long) {
+        currStartPositionMillis = startPosition
         listener?.updateStartPosition(currStartPositionMillis)
         binding.selectedRangeTime.text = formatTime(startPosition) + " - " + formatTime(endPosition)
     }
 
-    private fun formatTime(seconds: Int): String {
+    private fun formatTime(millis: Long): String {
+        val seconds = millis / 1000
         val minutes = seconds / 60
         val secs = seconds % 60
         return String.format("%02d:%02d", minutes, secs)
     }
 
+    fun toPx(dp: Int): Float = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        dp.toFloat(),
+        resources.displayMetrics)
 
     interface AudioRangeSelectorListener {
-        fun playAudioAt(startPosSeconds: Float)
+        fun playAudioAt(startPosMillis: Long)
         fun updateStartPosition(startPosMillis: Long)
     }
 }

@@ -14,4 +14,5 @@
     <string name="loading">Loading</string>
     <string name="failed_to_trim_audio">Failed to trim audio</string>
     <string name="close">Close</string>
+    <string name="audio_too_short">Audio cannot be shorter than video.\nSelected Audio length (millis) = %1$s.\nSelected Video length (millis) = %2$s.</string>
 </resources>

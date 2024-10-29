@@ -51,7 +51,8 @@
                     app:wave_progress_color="@color/colorAccent"
                     app:marker_color="@color/editorColorOnBackground"
                     app:marker_width="1dp"
-                    app:wave_gap="@dimen/_4sdp"
+                    app:wave_gap="4dp"
+                    app:wave_width="4dp"
                     app:wave_min_height="@dimen/_12sdp"
                     />
 

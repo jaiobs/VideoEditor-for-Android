@@ -70,7 +70,7 @@ class AudioVideoMergerFragment : Fragment(),
 
     private lateinit var audioFilePath: String
     private lateinit var videoFilePath: String
-    private var frameSizeSeconds: Float = 1f
+    private var frameSizeMillis: Long = 0
 
     private lateinit var videoFile: File
     private lateinit var audioFile: File
@@ -104,11 +104,19 @@ class AudioVideoMergerFragment : Fragment(),
             audioFile = File(audioFilePath)
             videoFile = File(videoFilePath)
             audioLengthMillis = VideoEditorUtils.getVideoDuration(requireContext(), audioFile)
-            val vidTimeInMillis = VideoEditorUtils.getVideoDuration(requireContext(), videoFile)
-            frameSizeSeconds = (vidTimeInMillis / 1000).toFloat()
-            setupAudioExoPlayer()
-            setupVideoExoPlayer()
-            initViews()
+            frameSizeMillis = VideoEditorUtils.getVideoDuration(requireContext(), videoFile)
+
+            if (audioLengthMillis < frameSizeMillis) {
+                showErrorLayout(getString(
+                    R.string.audio_too_short,
+                    audioLengthMillis.toString(),
+                    frameSizeMillis.toString()
+                ))
+            } else {
+                setupAudioExoPlayer()
+                setupVideoExoPlayer()
+                initViews()
+            }
         }
     }
 
@@ -180,7 +188,7 @@ class AudioVideoMergerFragment : Fragment(),
         binding.audioRangeSelector.initializeViews(
             audioFile = audioFile,
             audioLengthMillis = audioLengthMillis,
-            frameSizeSeconds = frameSizeSeconds,
+            frameSizeMillis = frameSizeMillis,
             listener = this
         )
 
@@ -264,7 +272,7 @@ class AudioVideoMergerFragment : Fragment(),
         progressUpdateJob = lifecycleScope.launch(Dispatchers.Main) {
             while (isActive) {
                 val currentPosition = exoPlayerAudio?.currentPosition ?: return@launch
-                if (currentPosition >= currStartPositionMillis + (frameSizeSeconds * 1000)) {
+                if (currentPosition >= currStartPositionMillis + frameSizeMillis) {
                     pausePlayers()
                     return@launch
                 }
@@ -283,8 +291,7 @@ class AudioVideoMergerFragment : Fragment(),
         progressUpdateJob?.cancel()
     }
 
-    override fun playAudioAt(startPosSeconds: Float) {
-        val startPosMillis = (startPosSeconds * 1000).toLong()
+    override fun playAudioAt(startPosMillis: Long) {
         exoPlayerAudio?.seekTo(startPosMillis)
         exoPlayerAudio?.play()
 
